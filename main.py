@@ -77,31 +77,51 @@ def record_prompt(text: str):
     con.close()
 
 
-def augment_prompt(prompt: str) -> str:
-    """Enhance prompt using vocabulary from highest-rated historical prompts."""
+# ── QUALITY CONSTANTS ────────────────────────────────────────────────────
+_Q_PHOTO = (
+    "professional product photography, sharp focus, crisp clean details, "
+    "studio quality lighting, high resolution, photorealistic, 8k uhd"
+)
+_Q_EDIT = (
+    "photorealistic, sharp details, seamless integration, consistent lighting, "
+    "professional retouching, high resolution"
+)
+_NEGATIVE = (
+    "blurry, out of focus, low quality, low resolution, distorted, deformed, "
+    "bad anatomy, ugly, text, watermark, signature, logo, noise, grain, pixelated, "
+    "oversaturated, washed out, jpeg artifacts, cartoon, painting, illustration, "
+    "sketch, drawing, 3d render, duplicate, extra limbs, malformed, disfigured, "
+    "poorly drawn, amateur, messy, chaotic"
+)
+_STYLE_VOCAB = {"elegant", "luxury", "minimal", "clean", "modern", "natural",
+                "warm", "cool", "bright", "dark", "soft", "dramatic", "vibrant",
+                "premium", "fresh", "bold"}
+
+
+def augment_prompt(prompt: str, context: str = "photo") -> str:
+    """Add quality terms + style words from top-rated historical prompts."""
+    quality = _Q_EDIT if context == "edit" else _Q_PHOTO
+    style_words: list[str] = []
     try:
         con = sqlite3.connect(DB_PATH)
         rows = con.execute(
-            "SELECT text FROM prompts WHERE score >= 0 ORDER BY (count + score * 3) DESC LIMIT 15"
+            "SELECT text FROM prompts WHERE score > 0 ORDER BY (count + score * 5) DESC LIMIT 10"
         ).fetchall()
         con.close()
-        if not rows:
-            return prompt
-        prompt_words = set(prompt.lower().split())
-        extra_words: list[str] = []
+        prompt_lower = prompt.lower()
         for (text,) in rows:
-            for word in text.lower().split():
-                if len(word) > 4 and word not in prompt_words and word not in extra_words:
-                    extra_words.append(word)
-                if len(extra_words) >= 5:
+            for word in text.lower().split(","):
+                word = word.strip()
+                if word in _STYLE_VOCAB and word not in prompt_lower:
+                    style_words.append(word)
+                if len(style_words) >= 2:
                     break
-            if len(extra_words) >= 5:
+            if len(style_words) >= 2:
                 break
-        if extra_words:
-            return prompt + ", " + ", ".join(extra_words[:3])
     except Exception:
         pass
-    return prompt
+    extra = (", " + ", ".join(style_words)) if style_words else ""
+    return f"{prompt}{extra}, {quality}"
 
 
 init_db()
@@ -189,11 +209,16 @@ def to_jpeg(img: Image.Image) -> io.BytesIO:
     return buf
 
 
-async def fetch_pollinations(prompt: str, w: int = 1080, h: int = 1080) -> Image.Image:
+async def fetch_pollinations(prompt: str, w: int = 1080, h: int = 1080,
+                             model: str = "flux-realism") -> Image.Image:
     seed = uuid.uuid4().int % 99999
-    enc = urllib.parse.quote(prompt, safe="")
-    url = f"https://image.pollinations.ai/prompt/{enc}?width={w}&height={h}&nologo=true&seed={seed}"
-    async with httpx.AsyncClient(timeout=90, follow_redirects=True) as c:
+    full_prompt = augment_prompt(prompt, context="photo")
+    enc = urllib.parse.quote(full_prompt, safe="")
+    neg = urllib.parse.quote(_NEGATIVE, safe="")
+    url = (f"https://image.pollinations.ai/prompt/{enc}"
+           f"?width={w}&height={h}&nologo=true&seed={seed}"
+           f"&model={model}&enhance=true&negative={neg}")
+    async with httpx.AsyncClient(timeout=120, follow_redirects=True) as c:
         r = await c.get(url)
         r.raise_for_status()
     return Image.open(io.BytesIO(r.content))
@@ -427,17 +452,19 @@ async def api_edit_prompt(request: Request, image: UploadFile = File(...), promp
     base = str(request.base_url).rstrip("/")
     img_url = f"{base}/api/temp/{img_id}"
 
-    augmented = augment_prompt(prompt)
+    augmented = augment_prompt(prompt, context="edit")
     enc = urllib.parse.quote(augmented, safe="")
     enc_img = urllib.parse.quote(img_url, safe="")
+    neg = urllib.parse.quote(_NEGATIVE, safe="")
     seed = uuid.uuid4().int % 99999
     url = (f"https://image.pollinations.ai/prompt/{enc}"
-           f"?image={enc_img}&width=1080&height=1080&nologo=true&seed={seed}")
+           f"?image={enc_img}&width=1080&height=1080&nologo=true&seed={seed}"
+           f"&model=flux&enhance=true&negative={neg}")
 
     record_prompt(prompt)
 
     try:
-        async with httpx.AsyncClient(timeout=90, follow_redirects=True) as c:
+        async with httpx.AsyncClient(timeout=120, follow_redirects=True) as c:
             r = await c.get(url)
             r.raise_for_status()
         return StreamingResponse(io.BytesIO(r.content), media_type="image/jpeg")
@@ -497,22 +524,28 @@ async def api_inpaint(request: Request, image: UploadFile = File(...),
 
     base = str(request.base_url).rstrip("/")
     img_url = f"{base}/api/temp/{img_id}"
-    enc = urllib.parse.quote(prompt, safe="")
+    w_raw, h_raw = x2 - x1, y2 - y1
+    # Round to multiple of 8 for model compatibility
+    w = max(64, (w_raw + 7) // 8 * 8)
+    h = max(64, (h_raw + 7) // 8 * 8)
+    augmented = augment_prompt(prompt, context="edit")
+    enc = urllib.parse.quote(augmented, safe="")
     enc_img = urllib.parse.quote(img_url, safe="")
+    neg = urllib.parse.quote(_NEGATIVE, safe="")
     seed = uuid.uuid4().int % 99999
-    w, h = x2 - x1, y2 - y1
     url = (f"https://image.pollinations.ai/prompt/{enc}"
-           f"?image={enc_img}&width={w}&height={h}&nologo=true&seed={seed}")
+           f"?image={enc_img}&width={w}&height={h}&nologo=true&seed={seed}"
+           f"&model=flux&enhance=true&negative={neg}")
 
     record_prompt(prompt)
 
     try:
-        async with httpx.AsyncClient(timeout=90, follow_redirects=True) as c:
+        async with httpx.AsyncClient(timeout=120, follow_redirects=True) as c:
             r = await c.get(url)
             r.raise_for_status()
 
-        new_region = Image.open(io.BytesIO(r.content)).convert("RGB").resize((w, h), Image.LANCZOS)
-        soft_mask = mask_img.crop((x1, y1, x2, y2)).filter(ImageFilter.GaussianBlur(12))
+        new_region = Image.open(io.BytesIO(r.content)).convert("RGB").resize((w_raw, h_raw), Image.LANCZOS)
+        soft_mask = mask_img.crop((x1, y1, x2, y2)).filter(ImageFilter.GaussianBlur(14))
         img.paste(new_region, (x1, y1), soft_mask)
         return StreamingResponse(to_jpeg(img), media_type="image/jpeg")
     finally:
