@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Замена фона товаров</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f13; color: #e8e6f0; min-height: 100vh; }
+
+  header { padding: 20px 32px; background: linear-gradient(135deg, #1a1726, #231f35); border-bottom: 1px solid #2d2842; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header span { font-size: 13px; color: #7b7491; }
+
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; height: calc(100vh - 65px); }
+
+  /* LEFT — Upload + Preview */
+  .left { padding: 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+
+  .drop-zone { border: 2px dashed #3d3660; border-radius: 18px; padding: 48px 20px; text-align: center; cursor: pointer; transition: all .2s; background: #14121f; }
+  .drop-zone:hover, .drop-zone.drag { border-color: #a78bfa; background: #1c1830; }
+  .drop-zone .icon { font-size: 48px; margin-bottom: 14px; }
+  .drop-zone p { font-size: 15px; color: #9990b0; }
+  .drop-zone strong { color: #c4b5fd; }
+
+  .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .preview-box { background: #14121f; border: 1px solid #2d2842; border-radius: 16px; overflow: hidden; }
+  .preview-box label { display: block; padding: 10px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #7b7491; border-bottom: 1px solid #2d2842; }
+  .preview-box .img-wrap { min-height: 220px; display: flex; align-items: center; justify-content: center; background: repeating-conic-gradient(#1a1726 0% 25%, #14121f 0% 50%) 0 0/20px 20px; }
+  .preview-box img { max-width: 100%; max-height: 320px; display: block; }
+  .preview-box .empty { color: #3d3660; font-size: 13px; }
+
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { padding: 12px 24px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s; }
+  .btn-primary { background: linear-gradient(135deg, #7c3aed, #a78bfa); color: white; }
+  .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn-secondary { background: #1e1a2e; color: #c4b5fd; border: 1.5px solid #3d3660; }
+  .btn-secondary:hover { background: #2a2340; }
+  .btn-green { background: linear-gradient(135deg, #059669, #34d399); color: white; }
+  .btn-green:hover { opacity: .9; }
+  .btn-danger { background: #2a1515; color: #f87171; border: 1.5px solid #5a2020; font-size: 12px; padding: 6px 12px; border-radius: 8px; }
+
+  /* RIGHT — Background panel */
+  .right { background: #0c0b14; border-left: 1px solid #1e1a2e; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+  .panel-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #7b7491; margin-bottom: 2px; }
+
+  /* Color picker */
+  .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .color-swatch { width: 36px; height: 36px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: .15s; }
+  .color-swatch:hover, .color-swatch.active { border-color: #a78bfa; transform: scale(1.1); }
+  .color-custom { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .color-custom input[type=color] { width: 40px; height: 36px; border: none; border-radius: 8px; cursor: pointer; background: none; padding: 0; }
+  .color-custom span { font-size: 13px; color: #9990b0; }
+
+  /* BG presets */
+  .bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .bg-thumb { border-radius: 10px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: .15s; position: relative; aspect-ratio: 4/3; }
+  .bg-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .bg-thumb:hover, .bg-thumb.active { border-color: #a78bfa; }
+  .bg-thumb .del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.7); color: #f87171; border: none; border-radius: 6px; padding: 2px 7px; font-size: 11px; cursor: pointer; display: none; }
+  .bg-thumb:hover .del { display: block; }
+  .bg-thumb .name { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.6); padding: 4px 8px; font-size: 11px; color: #e8e6f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bg-empty { color: #3d3660; font-size: 13px; text-align: center; padding: 20px 0; }
+
+  .upload-bg-btn { width: 100%; padding: 10px; background: #14121f; border: 1.5px dashed #3d3660; border-radius: 10px; color: #7b7491; font-size: 13px; cursor: pointer; font-family: inherit; transition: .15s; text-align: center; }
+  .upload-bg-btn:hover { border-color: #a78bfa; color: #c4b5fd; }
+
+  /* Status */
+  .status { padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+  .status.info { background: #1a1630; color: #a78bfa; border: 1px solid #2d2060; }
+  .status.error { background: #1f0f0f; color: #f87171; border: 1px solid #5a1515; }
+  .status.success { background: #0d1f18; color: #34d399; border: 1px solid #0e3325; }
+
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; margin-right: 8px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  input[type=file] { display: none; }
+  hr { border: none; border-top: 1px solid #1e1a2e; }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:28px">🛍️</span>
+  <div>
+    <h1>Замена фона товаров</h1>
+    <span>Загрузи фото товара → выбери фон → скачай</span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT -->
+  <div class="left">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">📦</div>
+      <p>Перетащи фото товара сюда<br>или <strong>нажми для выбора</strong></p>
+      <p style="font-size:12px;margin-top:8px;color:#5a5270">JPG, PNG, WEBP до 20 МБ</p>
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+    <input type="file" id="bgUploadInput" accept="image/*">
+
+    <div class="preview-row" id="previewRow" style="display:none">
+      <div class="preview-box">
+        <label>Оригинал</label>
+        <div class="img-wrap"><img id="origImg"><span class="empty" id="origEmpty">нет фото</span></div>
+      </div>
+      <div class="preview-box">
+        <label>Результат</label>
+        <div class="img-wrap" style="background: repeating-conic-gradient(#1a1726 0% 25%, #14121f 0% 50%) 0 0/20px 20px">
+          <img id="resultImg" style="display:none">
+          <span class="empty" id="resultEmpty">нажми «Обработать»</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="statusBox"></div>
+
+    <div class="actions" id="actionsRow" style="display:none">
+      <button class="btn btn-primary" id="processBtn" onclick="process()">✨ Обработать</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">🔄 Другое фото</button>
+      <button class="btn btn-green" id="downloadBtn" style="display:none" onclick="download()">⬇️ Скачать JPG</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div>
+      <div class="panel-title">Сплошной цвет</div>
+      <div class="color-grid" id="colorGrid"></div>
+      <div class="color-custom">
+        <input type="color" id="customColor" value="#ffffff" onchange="selectColor(this.value)">
+        <span>Свой цвет</span>
+      </div>
+    </div>
+
+    <hr>
+
+    <div>
+      <div class="panel-title" style="margin-bottom:10px">Свои фоны</div>
+      <div class="bg-grid" id="bgGrid"></div>
+      <div class="bg-empty" id="bgEmpty">Загрузи первый фон ↓</div>
+      <button class="upload-bg-btn" onclick="document.getElementById('bgUploadInput').click()" style="margin-top:10px">
+        + Загрузить фон
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let selectedFile = null;
+let selectedBgFile = null;
+let selectedBgName = null;
+let selectedColor = null;
+let resultBlob = null;
+
+const COLORS = ['#ffffff','#f5f5f5','#e8e6f0','#fef9ec','#ecfdf5','#eff6ff',
+                 '#fce7f3','#fff7ed','#1f2937','#111827','#0f172a','#1e1b4b'];
+
+// Init colors
+const cg = document.getElementById('colorGrid');
+COLORS.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'color-swatch';
+  s.style.background = c;
+  s.title = c;
+  s.onclick = () => selectColor(c);
+  cg.appendChild(s);
+});
+
+function selectColor(c) {
+  selectedColor = c;
+  selectedBgName = null;
+  selectedBgFile = null;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active'));
+  const match = [...document.querySelectorAll('.color-swatch')].find(s => s.style.background === c || s.style.background === hexToRgb(c));
+  if (match) match.classList.add('active');
+  document.getElementById('customColor').value = c;
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// File upload
+document.getElementById('fileInput').onchange = e => loadFile(e.target.files[0]);
+document.getElementById('bgUploadInput').onchange = e => uploadBg(e.target.files[0]);
+
+const dz = document.getElementById('dropZone');
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
+dz.ondragleave = () => dz.classList.remove('drag');
+dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag'); loadFile(e.dataTransfer.files[0]); };
+
+function loadFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  const url = URL.createObjectURL(file);
+  document.getElementById('origImg').src = url;
+  document.getElementById('origImg').style.display = 'block';
+  document.getElementById('origEmpty').style.display = 'none';
+  document.getElementById('previewRow').style.display = 'grid';
+  document.getElementById('actionsRow').style.display = 'flex';
+  document.getElementById('dropZone').style.display = 'none';
+  document.getElementById('resultImg').style.display = 'none';
+  document.getElementById('resultEmpty').style.display = 'block';
+  document.getElementById('downloadBtn').style.display = 'none';
+  resultBlob = null;
+  setStatus('');
+}
+
+function setStatus(msg, type='info') {
+  const b = document.getElementById('statusBox');
+  b.innerHTML = msg ? `<div class="status ${type}">${msg}</div>` : '';
+}
+
+async function process() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('processBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Обрабатываю...';
+  setStatus('Удаляю фон — это займёт 10–30 секунд...', 'info');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+
+    let url, method = 'POST';
+    if (selectedBgFile) {
+      fd.append('bg_file', selectedBgFile);
+      url = `${API}/api/replace`;
+    } else if (selectedBgName) {
+      fd.append('bg_name', selectedBgName);
+      url = `${API}/api/replace`;
+    } else if (selectedColor) {
+      fd.append('color', selectedColor);
+      url = `${API}/api/replace`;
+    } else {
+      url = `${API}/api/remove`;
+    }
+
+    const res = await fetch(url, { method, body: fd });
+    if (!res.ok) { const t = await res.text(); throw new Error(t); }
+    resultBlob = await res.blob();
+    const objUrl = URL.createObjectURL(resultBlob);
+    document.getElementById('resultImg').src = objUrl;
+    document.getElementById('resultImg').style.display = 'block';
+    document.getElementById('resultEmpty').style.display = 'none';
+    document.getElementById('downloadBtn').style.display = 'flex';
+    setStatus('Готово! 🎉', 'success');
+  } catch(e) {
+    setStatus('Ошибка: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✨ Обработать';
+  }
+}
+
+function download() {
+  if (!resultBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(resultBlob);
+  a.download = selectedBgName || selectedColor ? 'product_with_bg.jpg' : 'product_no_bg.png';
+  a.click();
+}
+
+// Backgrounds
+async function loadBgs() {
+  const res = await fetch('/api/backgrounds');
+  const bgs = await res.json();
+  renderBgs(bgs);
+}
+
+function renderBgs(bgs) {
+  const grid = document.getElementById('bgGrid');
+  const empty = document.getElementById('bgEmpty');
+  grid.innerHTML = '';
+  empty.style.display = bgs.length ? 'none' : 'block';
+  bgs.forEach(bg => {
+    const div = document.createElement('div');
+    div.className = 'bg-thumb';
+    div.innerHTML = `<img src="${bg.data}"><div class="name">${bg.name}</div><button class="del" onclick="deleteBg(event,'${bg.file}')">✕</button>`;
+    div.onclick = () => selectBg(bg.file, div);
+    grid.appendChild(div);
+  });
+}
+
+function selectBg(file, el) {
+  selectedBgName = file;
+  selectedBgFile = null;
+  selectedColor = null;
+  document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function uploadBg(file) {
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/backgrounds/upload', { method: 'POST', body: fd });
+  if (res.ok) loadBgs();
+}
+
+async function deleteBg(e, file) {
+  e.stopPropagation();
+  if (!confirm('Удалить этот фон?')) return;
+  await fetch(`/api/backgrounds/${file}`, { method: 'DELETE' });
+  loadBgs();
+}
+
+// Default: white color selected
+selectColor('#ffffff');
+loadBgs();
+</script>
+</body>
+</html>

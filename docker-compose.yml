@@ -1,0 +1,9 @@
+services:
+  bg-remover:
+    build: .
+    image: bg-remover
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backgrounds:/app/backgrounds
+    restart: unless-stopped
