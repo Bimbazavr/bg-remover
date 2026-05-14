@@ -153,7 +153,7 @@ async def api_generate(
     encoded = prompt.replace(" ", "%20").replace(",", "%2C")
     bg_url = (
         f"https://image.pollinations.ai/prompt/{encoded}"
-        f"?width={fg.width}&height={fg.height}&nologo=true&seed={seed}&model=flux"
+        f"?width=1024&height=1024&nologo=true&seed={seed}"
     )
 
     try:
