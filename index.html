@@ -181,6 +181,35 @@ input[type=file]{display:none}
 .rate-btn.liked{border-color:#34d399;color:#34d399;background:#0d1f18}
 .rate-btn.disliked{border-color:#f87171;color:#f87171;background:#1f0f0f}
 
+/* QUICK PROMPT BAR */
+.quick-bar{background:#14121f;border:1.5px solid #1e1a2e;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+.quick-bar-row{display:flex;gap:8px;align-items:flex-end}
+.quick-bar textarea{flex:1;padding:10px 12px;background:#0f0e18;border:1.5px solid #2d2842;border-radius:10px;color:#d4cff0;font-size:13px;font-family:inherit;resize:none;outline:none;transition:.15s;min-height:48px;max-height:120px}
+.quick-bar textarea:focus{border-color:#7c3aed}
+.quick-bar-icons{display:flex;gap:6px}
+.icon-btn{width:40px;height:40px;border-radius:9px;border:1.5px solid #2d2842;background:#1a1726;color:#a78bfa;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.icon-btn:hover{border-color:#7c3aed;background:#1c1838}
+.quick-submit{padding:10px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#9d5ff5);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:.15s;height:40px;white-space:nowrap}
+.quick-submit:hover{opacity:.9}
+.quick-submit:disabled{opacity:.4;cursor:not-allowed}
+
+/* CANVAS INPAINT */
+.result-wrap{position:relative;display:inline-block;width:100%}
+#inpaintCanvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;display:none;border-radius:4px;touch-action:none}
+.inpaint-panel{display:none;flex-direction:column;gap:8px;padding:10px 12px;background:#0d0c15;border-top:1px solid #1e1a2e}
+.inpaint-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.brush-row{display:flex;align-items:center;gap:8px}
+.brush-row input[type=range]{width:80px;-webkit-appearance:none;height:3px;border-radius:2px;background:#2d2842;outline:none;cursor:pointer}
+.brush-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#e879f9;cursor:pointer}
+.inpaint-actions{display:flex;gap:6px;align-items:stretch;flex:1}
+.inpaint-actions textarea{flex:1;padding:8px 10px;background:#14121f;border:1.5px solid #1e1a2e;border-radius:9px;color:#d4cff0;font-size:12px;font-family:inherit;resize:none;outline:none;min-height:36px}
+.inpaint-actions textarea:focus{border-color:#e879f9}
+.btn-apply{padding:8px 16px;border:none;border-radius:9px;background:linear-gradient(135deg,#9333ea,#e879f9);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn-clear-mask{padding:8px 12px;border-radius:9px;border:1.5px solid #2d2842;background:#14121f;color:#6b6585;font-size:11px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn-clear-mask:hover{border-color:#7c3aed;color:#a78bfa}
+.btn-edit-toggle{padding:6px 12px;border-radius:8px;border:1.5px solid #2d2842;background:#14121f;color:#6b6585;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
+.btn-edit-toggle.active{border-color:#e879f9;color:#e879f9;background:#1a0d20}
+
 /* MOBILE */
 @media(max-width:768px){
   .burger{display:flex}
@@ -404,6 +433,21 @@ input[type=file]{display:none}
 <!-- ══ CONTENT ══ -->
 <main class="content">
 
+  <!-- Quick prompt + upload bar -->
+  <div class="quick-bar">
+    <div class="quick-bar-row">
+      <div class="quick-bar-icons">
+        <button class="icon-btn" title="Загрузить фото" onclick="document.getElementById('fileInput').click()">🖼️</button>
+        <button class="icon-btn" title="Снять с камеры" onclick="document.getElementById('cameraInput').click()">📷</button>
+      </div>
+      <textarea id="quickPromptInput" placeholder="Что сделать с фото? Опиши изменение..." rows="1"
+        oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runQuickPrompt()}"></textarea>
+      <button class="quick-submit" id="quickSubmitBtn" onclick="runQuickPrompt()">▶</button>
+    </div>
+    <div id="quickBadge" style="font-size:10px;color:#3d3660"></div>
+  </div>
+
   <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
     <div class="dz-icon">📦</div>
     <div class="dz-title">Перетащи фото товара</div>
@@ -423,9 +467,32 @@ input[type=file]{display:none}
       <div class="pb-label"><span class="dot dot-o"></span>Оригинал</div>
       <div class="img-wrap"><img id="origImg" style="display:none"><span class="empty-hint" id="origEmpty">нет фото</span></div>
     </div>
-    <div class="preview-box">
-      <div class="pb-label"><span class="dot dot-r"></span>Результат</div>
-      <div class="img-wrap"><img id="resultImg" style="display:none"><span class="empty-hint" id="resultEmpty">нажми «Обработать»</span></div>
+    <div class="preview-box" id="resultBox">
+      <div class="pb-label">
+        <span class="dot dot-r"></span>Результат
+        <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleInpaint()" style="margin-left:auto;display:none">✏️ Редактировать</button>
+      </div>
+      <div class="img-wrap" style="position:relative" id="resultWrap">
+        <img id="resultImg" style="display:none">
+        <span class="empty-hint" id="resultEmpty">нажми «Обработать»</span>
+        <canvas id="inpaintCanvas"></canvas>
+      </div>
+      <div class="inpaint-panel" id="inpaintPanel">
+        <div class="inpaint-top">
+          <div class="brush-row">
+            <span style="font-size:10px;color:#5a5270">Кисть</span>
+            <input type="range" id="brushSize" min="10" max="80" value="28">
+            <span style="font-size:10px;color:#e879f9" id="brushVal">28px</span>
+          </div>
+          <button class="btn-clear-mask" onclick="clearMask()">✕ Очистить</button>
+        </div>
+        <div class="inpaint-actions">
+          <textarea id="inpaintPrompt" rows="1" placeholder="Что изменить в этой области?..."
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+          <button class="btn-apply" onclick="runInpaint()">Применить</button>
+        </div>
+        <div style="font-size:10px;color:#5a5270">Закрась область кистью → опиши что изменить → нажми Применить</div>
+      </div>
     </div>
   </div>
 
@@ -759,11 +826,17 @@ async function runProcess(regen=false){
 }
 
 function showResult(url){
-  document.getElementById('resultImg').src=url;
-  document.getElementById('resultImg').style.display='block';
+  const img = document.getElementById('resultImg');
+  img.src=url;
+  img.style.display='block';
   document.getElementById('resultEmpty').style.display='none';
   document.getElementById('dlBtn').style.display='inline-flex';
   document.getElementById('regenBtn').style.display='inline-flex';
+  document.getElementById('editToggleBtn').style.display='inline-flex';
+  // reset inpaint state
+  if (inpaintActive) toggleInpaint();
+  // sync canvas after image loads
+  img.onload = () => { if (inpaintActive) syncCanvas(); };
 }
 
 function doDownload(){
@@ -811,6 +884,187 @@ async function uploadBg(f){
 async function delBg(e,file){
   e.stopPropagation();if(!confirm('Удалить?'))return;
   await fetch(`/api/backgrounds/${file}`,{method:'DELETE'});loadBgs();
+}
+
+// ── QUICK PROMPT BAR ─────────────────────────────────────────────────
+let quickPromptTranslated = null, quickPromptTimer = null;
+const quickEl = document.getElementById('quickPromptInput');
+
+quickEl.addEventListener('input', function() {
+  const v = this.value.trim();
+  quickPromptTranslated = null;
+  clearTimeout(quickPromptTimer);
+  if (!v) { document.getElementById('quickBadge').textContent = ''; return; }
+  document.getElementById('quickBadge').textContent = 'Перевожу...';
+  quickPromptTimer = setTimeout(async () => {
+    try {
+      const fd = new FormData(); fd.append('text', v);
+      const r = await fetch('/api/translate', {method:'POST', body:fd});
+      quickPromptTranslated = (await r.json()).result;
+      document.getElementById('quickBadge').textContent = '→ ' + quickPromptTranslated.slice(0,60);
+    } catch { quickPromptTranslated = v; }
+  }, 800);
+});
+
+async function runQuickPrompt() {
+  const raw = quickEl.value.trim();
+  if (!raw) {
+    // no prompt — just open file picker
+    document.getElementById('fileInput').click();
+    return;
+  }
+  const prompt = quickPromptTranslated || raw;
+  // If no photo loaded — open file picker (prompt will be remembered)
+  if (!selectedFile && !resultBlob) {
+    document.getElementById('fileInput').click();
+    return;
+  }
+  // If we have a result blob — treat as inpaint-all (edit-prompt on the result)
+  const sourceBlob = resultBlob || fgBlob;
+  if (sourceBlob) {
+    document.getElementById('editPromptInput').value = raw;
+    editPromptTranslated = prompt;
+    currentEditPrompt = raw;
+    setStatus('✍️ Применяю запрос (15–40 сек)...', 'ai');
+    try {
+      const fd = new FormData();
+      fd.append('image', sourceBlob, 'img.jpg');
+      fd.append('prompt', prompt);
+      const r = await fetch('/api/edit-prompt', {method: 'POST', body: fd});
+      if (!r.ok) throw new Error(await r.text());
+      resultBlob = await r.blob();
+      showResult(URL.createObjectURL(resultBlob));
+      setStatus('Готово! 🎉', 'ok');
+      document.getElementById('rateRow').style.display = 'flex';
+    } catch(e) { setStatus('Ошибка: ' + e.message, 'error'); }
+    return;
+  }
+  // Have file but no result — process with edit-prompt after bg remove
+  await runProcess(false);
+}
+
+// ── CANVAS INPAINTING ─────────────────────────────────────────────────
+const canvas = document.getElementById('inpaintCanvas');
+const ctx = canvas.getContext('2d');
+let isPainting = false, inpaintActive = false;
+
+function toggleInpaint() {
+  const panel = document.getElementById('inpaintPanel');
+  const btn = document.getElementById('editToggleBtn');
+  inpaintActive = !inpaintActive;
+  canvas.style.display = inpaintActive ? 'block' : 'none';
+  panel.style.display = inpaintActive ? 'flex' : 'none';
+  btn.classList.toggle('active', inpaintActive);
+  btn.textContent = inpaintActive ? '✕ Отмена' : '✏️ Редактировать';
+  if (inpaintActive) syncCanvas();
+}
+
+function syncCanvas() {
+  const img = document.getElementById('resultImg');
+  canvas.width = img.naturalWidth || img.offsetWidth;
+  canvas.height = img.naturalHeight || img.offsetHeight;
+  canvas.style.width = img.offsetWidth + 'px';
+  canvas.style.height = img.offsetHeight + 'px';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function clearMask() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function getBrushSize() {
+  const disp = parseInt(document.getElementById('brushSize').value);
+  // scale from display size to actual canvas size
+  const img = document.getElementById('resultImg');
+  const scale = (img.naturalWidth || canvas.width) / img.offsetWidth;
+  return Math.round(disp * scale);
+}
+
+document.getElementById('brushSize').addEventListener('input', function() {
+  document.getElementById('brushVal').textContent = this.value + 'px';
+});
+
+function getPosOnCanvas(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return [(clientX - rect.left) * scaleX, (clientY - rect.top) * scaleY];
+}
+
+function paintAt(e) {
+  if (!isPainting) return;
+  const [x, y] = getPosOnCanvas(e);
+  const r = getBrushSize();
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(232, 121, 249, 0.55)';
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  e.preventDefault();
+}
+
+canvas.addEventListener('mousedown', e => { isPainting = true; paintAt(e); });
+canvas.addEventListener('mousemove', paintAt);
+canvas.addEventListener('mouseup', () => isPainting = false);
+canvas.addEventListener('mouseleave', () => isPainting = false);
+canvas.addEventListener('touchstart', e => { isPainting = true; paintAt(e); }, {passive:false});
+canvas.addEventListener('touchmove', paintAt, {passive:false});
+canvas.addEventListener('touchend', () => isPainting = false);
+
+async function runInpaint() {
+  const prompt = document.getElementById('inpaintPrompt').value.trim();
+  if (!prompt) { setStatus('Введи что изменить в области', 'error'); return; }
+  if (!resultBlob && !fgBlob) { setStatus('Сначала обработай фото', 'error'); return; }
+
+  // Check mask has content
+  const pd = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const hasMask = pd.some((v, i) => i % 4 === 3 && v > 10);
+  if (!hasMask) { setStatus('Закрась область кистью на фото', 'error'); return; }
+
+  setStatus('✍️ Редактирую область (15–40 сек)...', 'ai');
+
+  // Build mask: white where painted, black elsewhere
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
+  const mctx = maskCanvas.getContext('2d');
+  mctx.fillStyle = '#000'; mctx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const out = mctx.createImageData(canvas.width, canvas.height);
+  for (let i = 0; i < imgData.data.length; i += 4) {
+    const alpha = imgData.data[i+3];
+    const val = alpha > 10 ? 255 : 0;
+    out.data[i] = out.data[i+1] = out.data[i+2] = val;
+    out.data[i+3] = 255;
+  }
+  mctx.putImageData(out, 0, 0);
+
+  // Translate prompt
+  let translatedPrompt = prompt;
+  try {
+    const tf = new FormData(); tf.append('text', prompt);
+    const tr = await fetch('/api/translate', {method:'POST', body:tf});
+    translatedPrompt = (await tr.json()).result;
+  } catch {}
+
+  try {
+    const maskBlob = await new Promise(res => maskCanvas.toBlob(res, 'image/png'));
+    const fd = new FormData();
+    fd.append('image', resultBlob || fgBlob, 'img.jpg');
+    fd.append('mask', maskBlob, 'mask.png');
+    fd.append('prompt', translatedPrompt);
+    const r = await fetch('/api/inpaint', {method: 'POST', body: fd});
+    if (!r.ok) throw new Error(await r.text());
+    resultBlob = await r.blob();
+    showResult(URL.createObjectURL(resultBlob));
+    clearMask();
+    setStatus('Область изменена! ✏️', 'ok');
+    currentEditPrompt = prompt;
+    document.getElementById('rateRow').style.display = 'flex';
+  } catch(e) { setStatus('Ошибка: ' + e.message, 'error'); }
 }
 
 // ── EDIT BY PROMPT ────────────────────────────────────────────────────

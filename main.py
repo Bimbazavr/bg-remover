@@ -250,22 +250,40 @@ async def api_generate_image(prompt: str = Form(...)):
         raise HTTPException(502, f"Ошибка генерации: {e}")
 
 
+def make_reel_frame(img_data: bytes) -> bytes:
+    """Place image on 1080×1920 canvas with blurred background (TikTok/Instagram style)."""
+    src = Image.open(io.BytesIO(img_data)).convert("RGB")
+    # Blurred stretched background
+    bg = src.resize((1080, 1920), Image.LANCZOS)
+    bg = bg.filter(ImageFilter.GaussianBlur(45))
+    bg = Image.blend(bg, Image.new("RGB", bg.size, (0, 0, 0)), 0.25)
+    # Original centered, max height 1800px
+    thumb = src.copy()
+    thumb.thumbnail((1080, 1800), Image.LANCZOS)
+    x = (1080 - thumb.width) // 2
+    y = (1920 - thumb.height) // 2
+    bg.paste(thumb, (x, y))
+    buf = io.BytesIO()
+    bg.save(buf, "JPEG", quality=95)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 @app.post("/api/reel")
 async def api_reel(image: UploadFile = File(...)):
     data = await image.read()
+    frame = make_reel_frame(data)
     tmp_in = f"/tmp/{uuid.uuid4().hex}.jpg"
     tmp_out = f"/tmp/{uuid.uuid4().hex}.mp4"
-    Path(tmp_in).write_bytes(data)
+    Path(tmp_in).write_bytes(frame)
     try:
         cmd = [
             "ffmpeg", "-y", "-loop", "1", "-i", tmp_in,
             "-vf",
-            "scale=1080:1920:force_original_aspect_ratio=increase,"
-            "crop=1080:1920,"
-            "zoompan=z='min(zoom+0.002,1.5)':d=75:"
+            "zoompan=z='if(lte(zoom,1.0),1.06,max(1.001,zoom-0.002))':d=75:"
             "x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',fps=25",
             "-t", "3", "-pix_fmt", "yuv420p",
-            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
             tmp_out,
         ]
         res = subprocess.run(cmd, capture_output=True, timeout=60)
@@ -365,6 +383,59 @@ async def get_popular_prompts(q: str = ""):
         ).fetchall()
     con.close()
     return [{"text": r[0], "count": r[1], "score": r[2]} for r in rows]
+
+
+@app.post("/api/inpaint")
+async def api_inpaint(request: Request, image: UploadFile = File(...),
+                      mask: UploadFile = File(...), prompt: str = Form(...)):
+    img = Image.open(io.BytesIO(await image.read())).convert("RGB")
+    mask_img = Image.open(io.BytesIO(await mask.read())).convert("L")
+
+    # Scale mask to match image size
+    if mask_img.size != img.size:
+        mask_img = mask_img.resize(img.size, Image.LANCZOS)
+
+    bbox = mask_img.getbbox()
+    if not bbox:
+        raise HTTPException(400, "Маска пустая — обведи область кистью")
+
+    pad = 80
+    x1 = max(0, bbox[0] - pad)
+    y1 = max(0, bbox[1] - pad)
+    x2 = min(img.width, bbox[2] + pad)
+    y2 = min(img.height, bbox[3] + pad)
+
+    region = img.crop((x1, y1, x2, y2))
+    region_buf = io.BytesIO()
+    region.save(region_buf, "JPEG", quality=95)
+
+    img_id = uuid.uuid4().hex
+    TEMP_IMAGES[img_id] = region_buf.getvalue()
+    if len(TEMP_IMAGES) > 30:
+        del TEMP_IMAGES[next(iter(TEMP_IMAGES))]
+
+    base = str(request.base_url).rstrip("/")
+    img_url = f"{base}/api/temp/{img_id}"
+    enc = urllib.parse.quote(prompt)
+    enc_img = urllib.parse.quote(img_url, safe="")
+    seed = uuid.uuid4().int % 99999
+    w, h = x2 - x1, y2 - y1
+    url = (f"https://image.pollinations.ai/prompt/{enc}"
+           f"?image={enc_img}&width={w}&height={h}&nologo=true&seed={seed}")
+
+    record_prompt(prompt)
+
+    try:
+        async with httpx.AsyncClient(timeout=90, follow_redirects=True) as c:
+            r = await c.get(url)
+            r.raise_for_status()
+
+        new_region = Image.open(io.BytesIO(r.content)).convert("RGB").resize((w, h), Image.LANCZOS)
+        soft_mask = mask_img.crop((x1, y1, x2, y2)).filter(ImageFilter.GaussianBlur(12))
+        img.paste(new_region, (x1, y1), soft_mask)
+        return StreamingResponse(to_jpeg(img), media_type="image/jpeg")
+    finally:
+        TEMP_IMAGES.pop(img_id, None)
 
 
 @app.post("/api/prompts/rate")
