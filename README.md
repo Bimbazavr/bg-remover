@@ -2,7 +2,7 @@
 title: BG Remover
 emoji: 🛍️
 colorFrom: purple
-colorTo: orange
+colorTo: pink
 sdk: docker
 pinned: false
 ---
