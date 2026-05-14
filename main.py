@@ -1,13 +1,13 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from rembg import remove, new_session
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageFilter
 import io
 import os
 import uuid
 import base64
+import httpx
 from pathlib import Path
 
 app = FastAPI()
@@ -24,12 +24,30 @@ def remove_bg(img_bytes: bytes) -> Image.Image:
     return Image.open(io.BytesIO(result)).convert("RGBA")
 
 
+def add_shadow(fg: Image.Image, blur: int = 22, offset: tuple = (6, 12), opacity: float = 0.45) -> Image.Image:
+    canvas = Image.new("RGBA", fg.size, (0, 0, 0, 0))
+    alpha = fg.split()[3]
+    blurred_alpha = alpha.filter(ImageFilter.GaussianBlur(blur))
+    shadow_layer = Image.new("RGBA", fg.size, (15, 15, 15, int(255 * opacity)))
+    shadow_layer.putalpha(blurred_alpha)
+    canvas.paste(shadow_layer, offset, shadow_layer)
+    canvas.paste(fg, (0, 0), fg)
+    return canvas
+
+
 def compose(fg: Image.Image, bg_img: Image.Image) -> Image.Image:
     bg = bg_img.convert("RGBA").resize(fg.size, Image.LANCZOS)
     out = Image.new("RGBA", fg.size)
     out.paste(bg, (0, 0))
     out.paste(fg, (0, 0), fg)
     return out.convert("RGB")
+
+
+def to_jpeg(img: Image.Image, quality: int = 95) -> io.BytesIO:
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, "JPEG", quality=quality)
+    buf.seek(0)
+    return buf
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -70,9 +88,14 @@ async def delete_background(filename: str):
 
 
 @app.post("/api/remove")
-async def api_remove(file: UploadFile = File(...)):
+async def api_remove(
+    file: UploadFile = File(...),
+    shadow: str = Form("false"),
+):
     data = await file.read()
     fg = remove_bg(data)
+    if shadow == "true":
+        fg = add_shadow(fg)
     buf = io.BytesIO()
     fg.save(buf, "PNG")
     buf.seek(0)
@@ -86,9 +109,13 @@ async def api_replace(
     bg_file: UploadFile = File(None),
     bg_name: str = Form(None),
     color: str = Form(None),
+    shadow: str = Form("false"),
 ):
     data = await file.read()
     fg = remove_bg(data)
+
+    if shadow == "true":
+        fg = add_shadow(fg)
 
     if bg_file and bg_file.filename:
         bg_data = await bg_file.read()
@@ -106,8 +133,37 @@ async def api_replace(
         raise HTTPException(400, "Укажи фон: bg_file, bg_name или color")
 
     result = compose(fg, bg_img)
-    buf = io.BytesIO()
-    result.save(buf, "JPEG", quality=95)
-    buf.seek(0)
-    return StreamingResponse(buf, media_type="image/jpeg",
+    return StreamingResponse(to_jpeg(result), media_type="image/jpeg",
+                             headers={"Content-Disposition": "attachment; filename=result.jpg"})
+
+
+@app.post("/api/generate")
+async def api_generate(
+    file: UploadFile = File(...),
+    prompt: str = Form(...),
+    shadow: str = Form("false"),
+):
+    data = await file.read()
+    fg = remove_bg(data)
+
+    if shadow == "true":
+        fg = add_shadow(fg)
+
+    seed = uuid.uuid4().int % 99999
+    encoded = prompt.replace(" ", "%20").replace(",", "%2C")
+    bg_url = (
+        f"https://image.pollinations.ai/prompt/{encoded}"
+        f"?width={fg.width}&height={fg.height}&nologo=true&seed={seed}&model=flux"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=90, follow_redirects=True) as client:
+            resp = await client.get(bg_url)
+            resp.raise_for_status()
+        bg_img = Image.open(io.BytesIO(resp.content))
+    except Exception as e:
+        raise HTTPException(502, f"Ошибка генерации фона: {e}")
+
+    result = compose(fg, bg_img)
+    return StreamingResponse(to_jpeg(result), media_type="image/jpeg",
                              headers={"Content-Disposition": "attachment; filename=result.jpg"})

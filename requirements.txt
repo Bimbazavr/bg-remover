@@ -3,3 +3,4 @@ uvicorn[standard]
 rembg
 pillow
 python-multipart
+httpx
