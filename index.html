@@ -8,159 +8,126 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f13; color: #e8e6f0; min-height: 100vh; }
 
-/* HEADER */
 header {
-  padding: 0 28px;
-  height: 60px;
-  background: #13111e;
-  border-bottom: 1px solid #1e1a2e;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  padding: 0 28px; height: 60px; background: #13111e;
+  border-bottom: 1px solid #1e1a2e; display: flex; align-items: center; gap: 14px;
 }
 .logo { display: flex; align-items: center; gap: 10px; }
-.logo-icon {
-  width: 34px; height: 34px; border-radius: 10px;
-  background: linear-gradient(135deg, #7c3aed, #f472b6);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-}
-.logo-name { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+.logo-icon { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #7c3aed, #f472b6); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.logo-name { font-size: 17px; font-weight: 800; }
 .logo-name span { background: linear-gradient(135deg, #a78bfa, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .logo-badge { font-size: 10px; font-weight: 700; background: #7c3aed22; color: #a78bfa; border: 1px solid #7c3aed44; border-radius: 5px; padding: 2px 7px; margin-left: 4px; }
-.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.tag { font-size: 11px; font-weight: 600; color: #5a5270; background: #1a1726; border: 1px solid #2d2842; border-radius: 6px; padding: 4px 10px; }
+.header-right { margin-left: auto; font-size: 12px; color: #3d3660; }
 
-/* LAYOUT */
-.layout { display: grid; grid-template-columns: 1fr 300px; height: calc(100vh - 60px); }
+.layout { display: grid; grid-template-columns: 1fr 310px; height: calc(100vh - 60px); }
 
 /* LEFT */
-.left { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.left { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
 
-.drop-zone {
-  border: 2px dashed #2d2842; border-radius: 20px; padding: 52px 24px;
-  text-align: center; cursor: pointer; transition: all .2s;
-  background: linear-gradient(160deg, #14121f, #0f0e18);
-}
+.drop-zone { border: 2px dashed #2d2842; border-radius: 20px; padding: 52px 24px; text-align: center; cursor: pointer; transition: all .2s; background: linear-gradient(160deg, #14121f, #0f0e18); }
 .drop-zone:hover, .drop-zone.drag { border-color: #7c3aed; background: #1c1830; }
-.drop-zone .dz-icon { font-size: 52px; margin-bottom: 16px; line-height: 1; }
-.drop-zone .dz-title { font-size: 16px; font-weight: 700; color: #d4cff0; margin-bottom: 6px; }
-.drop-zone .dz-sub { font-size: 13px; color: #5a5270; }
-.drop-zone .dz-sub strong { color: #a78bfa; }
+.dz-icon { font-size: 52px; margin-bottom: 14px; line-height: 1; }
+.dz-title { font-size: 16px; font-weight: 700; color: #d4cff0; margin-bottom: 6px; }
+.dz-sub { font-size: 13px; color: #5a5270; }
+.dz-sub strong { color: #a78bfa; }
 
 .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .preview-box { background: #14121f; border: 1px solid #1e1a2e; border-radius: 16px; overflow: hidden; }
-.preview-box .pb-label {
-  padding: 9px 14px; font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .07em; color: #5a5270;
-  border-bottom: 1px solid #1e1a2e; display: flex; align-items: center; gap: 6px;
-}
+.pb-label { padding: 9px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #5a5270; border-bottom: 1px solid #1e1a2e; display: flex; align-items: center; gap: 6px; }
 .pb-dot { width: 6px; height: 6px; border-radius: 50%; }
 .pb-dot.orig { background: #7b7491; }
 .pb-dot.result { background: #34d399; }
-.preview-box .img-wrap {
-  min-height: 200px; display: flex; align-items: center; justify-content: center;
-  background: repeating-conic-gradient(#1a1726 0% 25%, #14121f 0% 50%) 0 0/18px 18px;
-}
-.preview-box img { max-width: 100%; max-height: 300px; display: block; }
+.img-wrap { min-height: 200px; display: flex; align-items: center; justify-content: center; background: repeating-conic-gradient(#1a1726 0% 25%, #14121f 0% 50%) 0 0/18px 18px; }
+.img-wrap img { max-width: 100%; max-height: 300px; display: block; }
 .empty-hint { color: #2d2842; font-size: 12px; }
 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.btn { padding: 11px 22px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s; display: flex; align-items: center; gap: 7px; }
+.btn { padding: 11px 20px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s; display: inline-flex; align-items: center; gap: 7px; }
 .btn-primary { background: linear-gradient(135deg, #7c3aed, #9d5ff5); color: white; box-shadow: 0 4px 15px #7c3aed40; }
-.btn-primary:hover { opacity: .9; transform: translateY(-1px); box-shadow: 0 6px 20px #7c3aed50; }
-.btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-primary:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
 .btn-secondary { background: #1a1726; color: #a78bfa; border: 1.5px solid #2d2842; }
-.btn-secondary:hover { background: #1e1a2e; border-color: #3d3660; }
-.btn-green { background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 4px 12px #05966940; }
+.btn-secondary:hover { background: #1e1a2e; }
+.btn-green { background: linear-gradient(135deg, #059669, #10b981); color: white; }
 .btn-green:hover { opacity: .9; transform: translateY(-1px); }
+.btn-regen { background: #1a1020; color: #e879f9; border: 1.5px solid #6b21a840; }
+.btn-regen:hover { background: #220d2e; border-color: #a855f7; }
 
-.shadow-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #7b7491; cursor: pointer; user-select: none; margin-left: 4px; }
+.shadow-toggle { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #7b7491; cursor: pointer; user-select: none; }
 .shadow-toggle input { display: none; }
-.toggle-track {
-  width: 36px; height: 20px; border-radius: 10px; background: #1e1a2e;
-  border: 1px solid #2d2842; position: relative; transition: .2s;
-}
-.toggle-track::after {
-  content: ''; position: absolute; top: 3px; left: 3px;
-  width: 12px; height: 12px; border-radius: 50%; background: #5a5270; transition: .2s;
-}
-.shadow-toggle input:checked + .toggle-track { background: #7c3aed22; border-color: #7c3aed; }
-.shadow-toggle input:checked + .toggle-track::after { left: 19px; background: #a78bfa; }
+.tog { width: 36px; height: 20px; border-radius: 10px; background: #1e1a2e; border: 1px solid #2d2842; position: relative; transition: .2s; flex-shrink: 0; }
+.tog::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #5a5270; transition: .2s; }
+.shadow-toggle input:checked + .tog { background: #7c3aed22; border-color: #7c3aed; }
+.shadow-toggle input:checked + .tog::after { left: 19px; background: #a78bfa; }
 
-/* STATUS */
-.status { padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.status { padding: 11px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .status.info { background: #1a1630; color: #a78bfa; border: 1px solid #2d2060; }
 .status.error { background: #1f0f0f; color: #f87171; border: 1px solid #5a1515; }
 .status.success { background: #0d1f18; color: #34d399; border: 1px solid #0e3325; }
 .status.ai { background: #1a1020; color: #e879f9; border: 1px solid #6b21a840; }
-.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.25); border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+.spinner { width: 14px; height: 14px; min-width: 14px; border: 2px solid rgba(255,255,255,.25); border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* RIGHT PANEL */
+/* RIGHT */
 .right { background: #0c0b14; border-left: 1px solid #1a1726; display: flex; flex-direction: column; overflow: hidden; }
-
-/* Tabs */
 .tabs { display: flex; border-bottom: 1px solid #1a1726; flex-shrink: 0; }
-.tab {
-  flex: 1; padding: 14px 8px; text-align: center; font-size: 12px; font-weight: 700;
-  color: #5a5270; cursor: pointer; transition: .15s; border-bottom: 2px solid transparent;
-  text-transform: uppercase; letter-spacing: .05em;
-}
+.tab { flex: 1; padding: 13px 8px; text-align: center; font-size: 11px; font-weight: 700; color: #5a5270; cursor: pointer; transition: .15s; border-bottom: 2px solid transparent; text-transform: uppercase; letter-spacing: .05em; }
 .tab:hover { color: #9990b0; }
 .tab.active { color: #a78bfa; border-bottom-color: #7c3aed; }
 
-.tab-content { flex: 1; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 16px; }
-.tab-pane { display: none; flex-direction: column; gap: 16px; }
+.panel-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 0; }
+.tab-pane { display: none; flex-direction: column; gap: 14px; }
 .tab-pane.active { display: flex; }
 
-.panel-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #5a5270; margin-bottom: 8px; }
+.sec-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #5a5270; margin-bottom: 8px; }
 
-/* AI PRESETS */
-.ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.ai-preset {
-  border-radius: 12px; padding: 14px 10px; text-align: center; cursor: pointer;
-  border: 1.5px solid #1e1a2e; transition: all .15s; background: #14121f;
-}
+/* AI TAB */
+.ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.ai-preset { border-radius: 11px; padding: 13px 8px; text-align: center; cursor: pointer; border: 1.5px solid #1e1a2e; transition: all .15s; background: #14121f; }
 .ai-preset:hover { border-color: #7c3aed; background: #1a1630; }
-.ai-preset.active { border-color: #a78bfa; background: #1c1838; box-shadow: 0 0 0 2px #7c3aed30; }
-.ai-preset .pi { font-size: 24px; display: block; margin-bottom: 6px; }
-.ai-preset .pt { font-size: 11px; font-weight: 700; color: #9990b0; line-height: 1.3; }
+.ai-preset.active { border-color: #a78bfa; background: #1c1838; }
+.ai-preset .pi { font-size: 22px; display: block; margin-bottom: 5px; }
+.ai-preset .pt { font-size: 10px; font-weight: 700; color: #9990b0; line-height: 1.3; }
 .ai-preset.active .pt { color: #c4b5fd; }
 
-.prompt-box { display: flex; flex-direction: column; gap: 8px; }
-.prompt-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #5a5270; }
-.prompt-input {
-  width: 100%; padding: 10px 13px; background: #14121f; border: 1.5px solid #1e1a2e;
-  border-radius: 10px; color: #d4cff0; font-size: 13px; font-family: inherit; resize: none;
-  transition: .15s; outline: none;
-}
+.prompt-wrap { position: relative; }
+.prompt-input { width: 100%; padding: 10px 13px; background: #14121f; border: 1.5px solid #1e1a2e; border-radius: 10px; color: #d4cff0; font-size: 13px; font-family: inherit; resize: none; transition: .15s; outline: none; }
 .prompt-input:focus { border-color: #7c3aed; background: #1a1630; }
-.prompt-hint { font-size: 11px; color: #3d3660; }
+.translate-badge { font-size: 10px; color: #5a5270; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+.translate-badge.done { color: #34d399; }
+.translate-badge.loading { color: #a78bfa; }
 
-/* COLORS */
-.color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
-.color-swatch { width: 100%; aspect-ratio: 1; border-radius: 9px; cursor: pointer; border: 2px solid transparent; transition: .15s; }
+/* COLOR TAB */
+.color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.color-swatch { width: 100%; aspect-ratio: 1; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: .15s; }
 .color-swatch:hover, .color-swatch.active { border-color: #a78bfa; transform: scale(1.1); }
 .color-custom { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
-.color-custom input[type=color] { width: 42px; height: 38px; border: none; border-radius: 9px; cursor: pointer; background: none; padding: 0; }
+.color-custom input[type=color] { width: 42px; height: 36px; border: none; border-radius: 8px; cursor: pointer; background: none; padding: 0; }
 .color-custom span { font-size: 13px; color: #7b7491; }
 
-/* MY BACKGROUNDS */
-.bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.bg-thumb { border-radius: 10px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: .15s; position: relative; aspect-ratio: 4/3; }
+/* CUSTOM BG TAB */
+.bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.bg-thumb { border-radius: 9px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: .15s; position: relative; aspect-ratio: 4/3; }
 .bg-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .bg-thumb:hover, .bg-thumb.active { border-color: #a78bfa; }
-.bg-thumb .del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.75); color: #f87171; border: none; border-radius: 6px; padding: 2px 7px; font-size: 11px; cursor: pointer; display: none; }
+.bg-thumb .del { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,.75); color: #f87171; border: none; border-radius: 5px; padding: 2px 6px; font-size: 10px; cursor: pointer; display: none; }
 .bg-thumb:hover .del { display: block; }
-.bg-thumb .bname { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.65); padding: 4px 7px; font-size: 10px; color: #c4b5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bg-empty { color: #2d2842; font-size: 13px; text-align: center; padding: 16px 0; }
-.upload-bg-btn {
-  width: 100%; padding: 10px; background: #14121f; border: 1.5px dashed #2d2842;
-  border-radius: 10px; color: #5a5270; font-size: 12px; cursor: pointer; font-family: inherit;
-  transition: .15s; text-align: center; font-weight: 600;
-}
+.bg-thumb .bname { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.65); padding: 3px 6px; font-size: 10px; color: #c4b5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bg-empty { color: #2d2842; font-size: 12px; text-align: center; padding: 14px 0; }
+.upload-bg-btn { width: 100%; padding: 9px; background: #14121f; border: 1.5px dashed #2d2842; border-radius: 9px; color: #5a5270; font-size: 12px; cursor: pointer; font-family: inherit; transition: .15s; text-align: center; font-weight: 600; }
 .upload-bg-btn:hover { border-color: #7c3aed; color: #a78bfa; }
+
+/* SIZE/POSITION — always visible below tabs */
+.placement-panel { border-top: 1px solid #1a1726; padding: 14px 16px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
+.scale-row { display: flex; align-items: center; gap: 10px; }
+.scale-label { font-size: 11px; color: #5a5270; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.scale-val { font-size: 12px; font-weight: 700; color: #a78bfa; min-width: 36px; text-align: right; }
+input[type=range] { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 2px; background: #2d2842; outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #7c3aed; border: 2px solid #a78bfa; cursor: pointer; }
+.pos-row { display: flex; gap: 6px; }
+.pos-btn { flex: 1; padding: 7px 4px; background: #14121f; border: 1.5px solid #1e1a2e; border-radius: 8px; color: #5a5270; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; text-align: center; }
+.pos-btn:hover { border-color: #3d3660; color: #9990b0; }
+.pos-btn.active { border-color: #7c3aed; color: #a78bfa; background: #1a1630; }
 
 input[type=file] { display: none; }
 hr { border: none; border-top: 1px solid #1a1726; }
@@ -174,10 +141,7 @@ hr { border: none; border-top: 1px solid #1a1726; }
     <div class="logo-name"><span>Приложуха</span></div>
     <span class="logo-badge">AI</span>
   </div>
-  <div class="header-right">
-    <span class="tag">Удаление фона</span>
-    <span class="tag">AI Генерация</span>
-  </div>
+  <div class="header-right">Удаление и замена фона товаров</div>
 </header>
 
 <div class="layout">
@@ -187,7 +151,7 @@ hr { border: none; border-top: 1px solid #1a1726; }
     <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
       <div class="dz-icon">📦</div>
       <div class="dz-title">Перетащи фото товара</div>
-      <div class="dz-sub">или <strong>нажми для выбора</strong> · JPG, PNG, WEBP до 20 МБ</div>
+      <div class="dz-sub">или <strong>нажми для выбора</strong> · JPG PNG WEBP до 20 МБ</div>
     </div>
 
     <input type="file" id="fileInput" accept="image/*">
@@ -213,18 +177,13 @@ hr { border: none; border-top: 1px solid #1a1726; }
     <div id="statusBox"></div>
 
     <div class="actions" id="actionsRow" style="display:none">
-      <button class="btn btn-primary" id="processBtn" onclick="process()">
-        <span>✨</span> Обработать
-      </button>
-      <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
-        🔄 Другое фото
-      </button>
-      <button class="btn btn-green" id="downloadBtn" style="display:none" onclick="download()">
-        ⬇️ Скачать
-      </button>
-      <label class="shadow-toggle" title="Добавить тень под товар">
+      <button class="btn btn-primary" id="processBtn" onclick="runProcess(false)">✨ Обработать</button>
+      <button class="btn btn-regen" id="regenBtn" style="display:none" onclick="runProcess(true)">🔄 Перегенерировать</button>
+      <button class="btn btn-secondary" onclick="resetPhoto()">📁 Другое фото</button>
+      <button class="btn btn-green" id="downloadBtn" style="display:none" onclick="download()">⬇️ Скачать</button>
+      <label class="shadow-toggle" title="Тень под товаром">
         <input type="checkbox" id="shadowToggle">
-        <div class="toggle-track"></div>
+        <div class="tog"></div>
         <span>Тень</span>
       </label>
     </div>
@@ -238,26 +197,28 @@ hr { border: none; border-top: 1px solid #1a1726; }
       <div class="tab" onclick="switchTab('custom')">Свои</div>
     </div>
 
-    <div class="tab-content">
+    <div class="panel-body">
 
       <!-- AI TAB -->
       <div class="tab-pane active" id="tab-ai">
         <div>
-          <div class="panel-section-title">Пресеты</div>
+          <div class="sec-title">Пресеты</div>
           <div class="ai-grid" id="aiGrid"></div>
         </div>
         <hr>
-        <div class="prompt-box">
-          <div class="prompt-label">Свой промпт</div>
-          <textarea class="prompt-input" id="customPrompt" rows="3" placeholder="Опиши фон на английском..."></textarea>
-          <div class="prompt-hint">Примеры: gradient pastel pink · dark luxury marble · outdoor street</div>
+        <div>
+          <div class="sec-title">Свой промпт (на русском)</div>
+          <div class="prompt-wrap">
+            <textarea class="prompt-input" id="customPrompt" rows="3" placeholder="Опиши фон своими словами..."></textarea>
+          </div>
+          <div class="translate-badge" id="translateBadge">· перевод автоматический</div>
         </div>
       </div>
 
       <!-- COLOR TAB -->
       <div class="tab-pane" id="tab-color">
         <div>
-          <div class="panel-section-title">Готовые цвета</div>
+          <div class="sec-title">Готовые цвета</div>
           <div class="color-grid" id="colorGrid"></div>
           <div class="color-custom">
             <input type="color" id="customColor" value="#ffffff" onchange="selectColor(this.value)">
@@ -269,67 +230,113 @@ hr { border: none; border-top: 1px solid #1a1726; }
       <!-- CUSTOM BG TAB -->
       <div class="tab-pane" id="tab-custom">
         <div>
-          <div class="panel-section-title">Мои фоны</div>
+          <div class="sec-title">Мои фоны</div>
           <div class="bg-grid" id="bgGrid"></div>
           <div class="bg-empty" id="bgEmpty">Загрузи первый фон ↓</div>
-          <button class="upload-bg-btn" onclick="document.getElementById('bgUploadInput').click()" style="margin-top:10px">
-            + Загрузить фон
-          </button>
+          <button class="upload-bg-btn" onclick="document.getElementById('bgUploadInput').click()" style="margin-top:8px">+ Загрузить фон</button>
         </div>
       </div>
 
     </div>
+
+    <!-- PLACEMENT — always visible -->
+    <div class="placement-panel">
+      <div>
+        <div class="scale-row">
+          <span class="scale-label">Размер</span>
+          <input type="range" id="scaleSlider" min="30" max="110" value="82" oninput="updateScale(this.value)">
+          <span class="scale-val" id="scaleVal">82%</span>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title" style="margin-bottom:6px">Позиция</div>
+        <div class="pos-row">
+          <button class="pos-btn" data-pos="top" onclick="selectPos('top',this)">Сверху</button>
+          <button class="pos-btn active" data-pos="center" onclick="selectPos('center',this)">По центру</button>
+          <button class="pos-btn" data-pos="bottom" onclick="selectPos('bottom',this)">Снизу</button>
+        </div>
+      </div>
+    </div>
   </div>
+
 </div>
 
 <script>
 const API = '';
 let selectedFile = null;
-let selectedBgFile = null;
+let fgBlob = null;          // cached removed-bg PNG
+let selectedColor = '#ffffff';
 let selectedBgName = null;
-let selectedColor = null;
+let selectedBgFile = null;
 let selectedAiPrompt = null;
+let translatedPrompt = null;
 let currentTab = 'ai';
+let currentPosition = 'center';
 let resultBlob = null;
-let resultIsAi = false;
+let translateTimer = null;
 
-// AI PRESETS
+// ── AI PRESETS ───────────────────────────────────────────────────────────
 const AI_PRESETS = [
   { icon: '🏛️', label: 'Белый студийный', prompt: 'clean white studio background soft light product photography professional' },
-  { icon: '🌿', label: 'Лайфстайл', prompt: 'lifestyle background flowers green plants natural light soft bokeh product photography' },
-  { icon: '🎯', label: 'Товар на подиуме', prompt: 'minimalist gray concrete podium platform product display studio light shadows' },
-  { icon: '🛋️', label: 'Интерьер', prompt: 'modern scandinavian interior blurred background soft light product photography' },
-  { icon: '🌅', label: 'Пастельный', prompt: 'soft pastel gradient peach beige pink background product photography' },
-  { icon: '🖤', label: 'Тёмный люкс', prompt: 'dark luxury background deep navy black marble texture gold product photography' },
+  { icon: '🌿', label: 'Лайфстайл',        prompt: 'lifestyle background flowers green plants natural light soft bokeh product photography' },
+  { icon: '🎯', label: 'На подиуме',        prompt: 'minimalist gray concrete podium platform product display studio light shadows' },
+  { icon: '🛋️', label: 'Интерьер',          prompt: 'modern scandinavian interior blurred background soft light product photography' },
+  { icon: '🌅', label: 'Пастельный',        prompt: 'soft pastel gradient peach beige pink background product photography' },
+  { icon: '🖤', label: 'Тёмный люкс',       prompt: 'dark luxury background deep navy black marble texture product photography' },
 ];
 
 const aiGrid = document.getElementById('aiGrid');
-AI_PRESETS.forEach((p, i) => {
+AI_PRESETS.forEach(p => {
   const el = document.createElement('div');
   el.className = 'ai-preset';
-  el.dataset.prompt = p.prompt;
   el.innerHTML = `<span class="pi">${p.icon}</span><div class="pt">${p.label}</div>`;
-  el.onclick = () => selectAiPreset(p.prompt, el);
+  el.onclick = () => {
+    selectedAiPrompt = p.prompt;
+    translatedPrompt = p.prompt;
+    document.getElementById('customPrompt').value = p.label;
+    document.querySelectorAll('.ai-preset').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    setBadge('Промпт готов ✓', 'done');
+  };
   aiGrid.appendChild(el);
 });
 
-function selectAiPreset(prompt, el) {
-  selectedAiPrompt = prompt;
-  selectedColor = null; selectedBgName = null; selectedBgFile = null;
+// Prompt input with auto-translate
+const promptEl = document.getElementById('customPrompt');
+promptEl.addEventListener('input', function() {
+  const val = this.value.trim();
+  translatedPrompt = null;
+  selectedAiPrompt = null;
   document.querySelectorAll('.ai-preset').forEach(e => e.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('customPrompt').value = prompt;
-}
-
-document.getElementById('customPrompt').addEventListener('input', function() {
-  if (this.value.trim()) {
-    selectedAiPrompt = this.value.trim();
-    selectedColor = null; selectedBgName = null; selectedBgFile = null;
-    document.querySelectorAll('.ai-preset').forEach(e => e.classList.remove('active'));
-  }
+  clearTimeout(translateTimer);
+  if (!val) { setBadge('· перевод автоматический', ''); return; }
+  setBadge('Перевожу...', 'loading');
+  translateTimer = setTimeout(() => translatePrompt(val), 800);
 });
 
-// TABS
+async function translatePrompt(text) {
+  try {
+    const fd = new FormData();
+    fd.append('text', text);
+    const r = await fetch('/api/translate', { method: 'POST', body: fd });
+    const data = await r.json();
+    translatedPrompt = data.result;
+    selectedAiPrompt = translatedPrompt;
+    setBadge('Переведено: ' + translatedPrompt.slice(0, 50) + (translatedPrompt.length > 50 ? '...' : ''), 'done');
+  } catch {
+    translatedPrompt = text;
+    selectedAiPrompt = text;
+    setBadge('Перевод недоступен, отправляю как есть', '');
+  }
+}
+
+function setBadge(text, cls) {
+  const b = document.getElementById('translateBadge');
+  b.textContent = text;
+  b.className = 'translate-badge' + (cls ? ' ' + cls : '');
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────
 function switchTab(name) {
   currentTab = name;
   document.querySelectorAll('.tab').forEach((t, i) => {
@@ -337,24 +344,18 @@ function switchTab(name) {
   });
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  // clear selection from other tabs
-  if (name !== 'ai') { selectedAiPrompt = null; document.querySelectorAll('.ai-preset').forEach(e => e.classList.remove('active')); }
-  if (name !== 'color') { selectedColor = null; document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active')); }
-  if (name !== 'custom') { selectedBgName = null; selectedBgFile = null; document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active')); }
 }
 
-// COLORS
-const COLORS = [
-  '#ffffff','#f5f5f5','#e8e6f0','#fef9ec','#ecfdf5',
-  '#eff6ff','#fce7f3','#fff7ed','#1f2937','#0f172a',
-  '#1e1b4b','#14121f','#f0fdf4','#fdf4ff','#fffbeb',
-];
+// ── COLORS ───────────────────────────────────────────────────────────────
+const COLORS = ['#ffffff','#f5f5f5','#e8e6f0','#fef9ec','#ecfdf5',
+                 '#eff6ff','#fce7f3','#1f2937','#0f172a','#1e1b4b',
+                 '#f0fdf4','#fdf4ff','#fffbeb','#ecfeff','#fafafa'];
 const cg = document.getElementById('colorGrid');
 COLORS.forEach(c => {
   const s = document.createElement('div');
   s.className = 'color-swatch';
   s.style.background = c;
-  s.style.outline = c === '#ffffff' ? '1px solid #2d2842' : '';
+  if (c === '#ffffff') s.style.outline = '1px solid #2d2842';
   s.title = c;
   s.onclick = () => selectColor(c, s);
   cg.appendChild(s);
@@ -362,18 +363,24 @@ COLORS.forEach(c => {
 
 function selectColor(c, el) {
   selectedColor = c;
-  selectedBgName = null; selectedBgFile = null; selectedAiPrompt = null;
   document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.bg-thumb, .ai-preset').forEach(s => s.classList.remove('active'));
   if (el) el.classList.add('active');
   document.getElementById('customColor').value = c;
 }
-document.getElementById('customColor').onchange = e => {
-  const swatches = [...document.querySelectorAll('.color-swatch')];
-  selectColor(e.target.value, null);
-};
+document.getElementById('customColor').onchange = e => selectColor(e.target.value, null);
+selectColor('#ffffff', cg.firstChild);
 
-// FILE UPLOAD
+// ── SCALE & POSITION ─────────────────────────────────────────────────────
+function updateScale(v) {
+  document.getElementById('scaleVal').textContent = v + '%';
+}
+function selectPos(pos, el) {
+  currentPosition = pos;
+  document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── FILE ─────────────────────────────────────────────────────────────────
 document.getElementById('fileInput').onchange = e => loadFile(e.target.files[0]);
 document.getElementById('bgUploadInput').onchange = e => uploadBg(e.target.files[0]);
 const dz = document.getElementById('dropZone');
@@ -384,6 +391,7 @@ dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag'); loadFile(e.d
 function loadFile(file) {
   if (!file) return;
   selectedFile = file;
+  fgBlob = null;
   const url = URL.createObjectURL(file);
   document.getElementById('origImg').src = url;
   document.getElementById('origImg').style.display = 'block';
@@ -394,70 +402,101 @@ function loadFile(file) {
   document.getElementById('resultImg').style.display = 'none';
   document.getElementById('resultEmpty').style.display = 'block';
   document.getElementById('downloadBtn').style.display = 'none';
+  document.getElementById('regenBtn').style.display = 'none';
   resultBlob = null;
   setStatus('');
 }
 
-function setStatus(msg, type = 'info') {
-  const b = document.getElementById('statusBox');
-  b.innerHTML = msg ? `<div class="status ${type}"><div class="spinner"></div>${msg}</div>` : '';
-  if (type === 'success' || type === 'error') {
-    b.querySelector('.spinner').style.display = 'none';
-  }
+function resetPhoto() {
+  selectedFile = null; fgBlob = null;
+  document.getElementById('dropZone').style.display = '';
+  document.getElementById('previewRow').style.display = 'none';
+  document.getElementById('actionsRow').style.display = 'none';
+  document.getElementById('regenBtn').style.display = 'none';
+  setStatus('');
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileInput').click();
 }
 
-// PROCESS
-async function process() {
+// ── STATUS ───────────────────────────────────────────────────────────────
+function setStatus(msg, type = 'info') {
+  const b = document.getElementById('statusBox');
+  if (!msg) { b.innerHTML = ''; return; }
+  const noSpin = type === 'success' || type === 'error';
+  b.innerHTML = `<div class="status ${type}">${noSpin ? '' : '<div class="spinner"></div>'}${msg}</div>`;
+}
+
+// ── MAIN PROCESS ─────────────────────────────────────────────────────────
+async function runProcess(regen = false) {
   if (!selectedFile) return;
 
-  const shadow = document.getElementById('shadowToggle').checked ? 'true' : 'false';
   const btn = document.getElementById('processBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner" style="border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; display:inline-block;"></span> Обрабатываю...';
+  btn.textContent = 'Обрабатываю...';
 
-  const fd = new FormData();
-  fd.append('file', selectedFile);
-  fd.append('shadow', shadow);
-
-  let url;
+  const scale = parseFloat(document.getElementById('scaleSlider').value) / 100;
+  const shadow = document.getElementById('shadowToggle').checked ? 'true' : 'false';
 
   try {
-    if (currentTab === 'ai' && selectedAiPrompt) {
-      fd.append('prompt', selectedAiPrompt);
-      url = `${API}/api/generate`;
-      setStatus('Генерирую AI-фон — 15–40 сек...', 'ai');
-    } else if (currentTab === 'color' && selectedColor) {
-      fd.append('color', selectedColor);
-      url = `${API}/api/replace`;
-      setStatus('Удаляю фон...', 'info');
-    } else if (currentTab === 'custom' && selectedBgFile) {
-      fd.append('bg_file', selectedBgFile);
-      url = `${API}/api/replace`;
-      setStatus('Накладываю фон...', 'info');
-    } else if (currentTab === 'custom' && selectedBgName) {
-      fd.append('bg_name', selectedBgName);
-      url = `${API}/api/replace`;
-      setStatus('Накладываю фон...', 'info');
-    } else {
-      url = `${API}/api/remove`;
-      setStatus('Удаляю фон...', 'info');
+    // Step 1: remove bg if not cached (or re-uploaded)
+    if (!fgBlob || !regen) {
+      if (!fgBlob) {
+        setStatus('1/2 — Удаляю фон...', 'info');
+        const fd1 = new FormData();
+        fd1.append('file', selectedFile);
+        const r1 = await fetch('/api/remove', { method: 'POST', body: fd1 });
+        if (!r1.ok) throw new Error(await r1.text());
+        fgBlob = await r1.blob();
+      }
     }
 
-    const res = await fetch(url, { method: 'POST', body: fd });
-    if (!res.ok) { const t = await res.text(); throw new Error(t); }
-    resultBlob = await res.blob();
-    resultIsAi = currentTab === 'ai' && !!selectedAiPrompt;
+    // Step 2: composite
+    const fd2 = new FormData();
+    fd2.append('fg', fgBlob, 'fg.png');
+    fd2.append('scale', scale);
+    fd2.append('position', currentPosition);
+    fd2.append('shadow', shadow);
+
+    if (currentTab === 'ai') {
+      const prompt = selectedAiPrompt || translatedPrompt;
+      if (!prompt) throw new Error('Выбери пресет или введи промпт');
+      fd2.append('mode', 'generate');
+      fd2.append('prompt', prompt);
+      setStatus('2/2 — Генерирую AI-фон (15–40 сек)...', 'ai');
+    } else if (currentTab === 'color') {
+      fd2.append('mode', 'color');
+      fd2.append('color', selectedColor);
+      setStatus('2/2 — Накладываю цвет...', 'info');
+    } else if (selectedBgName) {
+      fd2.append('mode', 'bg_name');
+      fd2.append('bg_name', selectedBgName);
+      setStatus('2/2 — Накладываю фон...', 'info');
+    } else if (selectedBgFile) {
+      fd2.append('mode', 'bg_file');
+      fd2.append('bg_file', selectedBgFile);
+      setStatus('2/2 — Накладываю фон...', 'info');
+    } else {
+      fd2.append('mode', 'color');
+      fd2.append('color', '#ffffff');
+      setStatus('2/2 — Белый фон...', 'info');
+    }
+
+    const r2 = await fetch('/api/composite', { method: 'POST', body: fd2 });
+    if (!r2.ok) throw new Error(await r2.text());
+    resultBlob = await r2.blob();
+
     const objUrl = URL.createObjectURL(resultBlob);
     document.getElementById('resultImg').src = objUrl;
     document.getElementById('resultImg').style.display = 'block';
     document.getElementById('resultEmpty').style.display = 'none';
-    document.getElementById('downloadBtn').style.display = 'flex';
+    document.getElementById('downloadBtn').style.display = 'inline-flex';
+    document.getElementById('regenBtn').style.display = 'inline-flex';
     setStatus('Готово! 🎉', 'success');
   } catch (e) {
     setStatus('Ошибка: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<span>✨</span> Обработать';
+    btn.innerHTML = '✨ Обработать';
   }
 }
 
@@ -465,12 +504,11 @@ function download() {
   if (!resultBlob) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(resultBlob);
-  const ext = resultBlob.type === 'image/png' ? 'png' : 'jpg';
-  a.download = `product_${Date.now()}.${ext}`;
+  a.download = `product_${Date.now()}.jpg`;
   a.click();
 }
 
-// BACKGROUNDS
+// ── BACKGROUNDS ──────────────────────────────────────────────────────────
 async function loadBgs() {
   const res = await fetch('/api/backgrounds');
   renderBgs(await res.json());
@@ -485,16 +523,13 @@ function renderBgs(bgs) {
     const div = document.createElement('div');
     div.className = 'bg-thumb';
     div.innerHTML = `<img src="${bg.data}"><div class="bname">${bg.name}</div><button class="del" onclick="deleteBg(event,'${bg.file}')">✕</button>`;
-    div.onclick = () => selectBg(bg.file, div);
+    div.onclick = () => {
+      selectedBgName = bg.file; selectedBgFile = null;
+      document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active'));
+      div.classList.add('active');
+    };
     grid.appendChild(div);
   });
-}
-
-function selectBg(file, el) {
-  selectedBgName = file; selectedBgFile = null; selectedColor = null; selectedAiPrompt = null;
-  document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.color-swatch, .ai-preset').forEach(s => s.classList.remove('active'));
-  el.classList.add('active');
 }
 
 async function uploadBg(file) {
@@ -512,8 +547,6 @@ async function deleteBg(e, file) {
   loadBgs();
 }
 
-// Init
-selectColor('#ffffff', document.querySelector('.color-swatch'));
 loadBgs();
 </script>
 </body>
