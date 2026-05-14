@@ -1,9 +1,9 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from rembg import remove, new_session
 from PIL import Image, ImageFilter
-import io, os, uuid, base64, subprocess, httpx, numpy as np, sqlite3, urllib.parse
+import io, os, uuid, base64, subprocess, httpx, numpy as np, sqlite3, urllib.parse, re
 from pathlib import Path
 
 app = FastAPI()
@@ -16,6 +16,44 @@ OUT_W, OUT_H = 1080, 1080
 
 DB_PATH = Path(__file__).parent / "prompts.db"
 TEMP_IMAGES: dict = {}  # img_id -> bytes (in-memory temp storage)
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+ALLOWED_MODES = {"color", "bg_name", "bg_file", "generate"}
+HEX_RE = re.compile(r'^#[0-9a-fA-F]{6}$')
+SAFE_FILENAME_RE = re.compile(r'^[a-zA-Z0-9_\-]+\.(jpg|jpeg|png|webp)$', re.IGNORECASE)
+
+SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src https://fonts.gstatic.com; "
+        "img-src 'self' data: blob:; "
+        "connect-src 'self';"
+    ),
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+}
+
+
+async def read_limited(upload: UploadFile, max_bytes: int = MAX_FILE_SIZE) -> bytes:
+    data = await upload.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise HTTPException(413, "Файл слишком большой (макс. 10 МБ)")
+    return data
+
+
+def safe_bg_path(filename: str) -> Path:
+    """Prevent path traversal — only allow safe filenames inside BG_DIR."""
+    safe = Path(filename).name
+    if not safe or not SAFE_FILENAME_RE.match(safe):
+        raise HTTPException(400, "Недопустимое имя файла")
+    p = BG_DIR / safe
+    try:
+        p.resolve().relative_to(BG_DIR.resolve())
+    except ValueError:
+        raise HTTPException(400, "Недопустимый путь к файлу")
+    return p
 
 
 def init_db():
@@ -43,7 +81,6 @@ def augment_prompt(prompt: str) -> str:
     """Enhance prompt using vocabulary from highest-rated historical prompts."""
     try:
         con = sqlite3.connect(DB_PATH)
-        # Get top prompts by combined score (usage × rating)
         rows = con.execute(
             "SELECT text FROM prompts WHERE score >= 0 ORDER BY (count + score * 3) DESC LIMIT 15"
         ).fetchall()
@@ -154,7 +191,7 @@ def to_jpeg(img: Image.Image) -> io.BytesIO:
 
 async def fetch_pollinations(prompt: str, w: int = 1080, h: int = 1080) -> Image.Image:
     seed = uuid.uuid4().int % 99999
-    enc = prompt.replace(" ", "%20").replace(",", "%2C")
+    enc = urllib.parse.quote(prompt, safe="")
     url = f"https://image.pollinations.ai/prompt/{enc}?width={w}&height={h}&nologo=true&seed={seed}"
     async with httpx.AsyncClient(timeout=90, follow_redirects=True) as c:
         r = await c.get(url)
@@ -162,15 +199,26 @@ async def fetch_pollinations(prompt: str, w: int = 1080, h: int = 1080) -> Image
     return Image.open(io.BytesIO(r.content))
 
 
+def add_security_headers(response: Response) -> Response:
+    for k, v in SECURITY_HEADERS.items():
+        response.headers[k] = v
+    return response
+
+
 # ── ROUTES ───────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return open(Path(__file__).parent / "index.html").read()
+    content = open(Path(__file__).parent / "index.html").read()
+    response = HTMLResponse(content=content)
+    for k, v in SECURITY_HEADERS.items():
+        response.headers[k] = v
+    return response
 
 
 @app.post("/api/translate")
 async def api_translate(text: str = Form(...)):
+    text = text[:500]
     try:
         async with httpx.AsyncClient(timeout=8) as c:
             r = await c.get("https://api.mymemory.translated.net/get",
@@ -182,7 +230,8 @@ async def api_translate(text: str = Form(...)):
 
 @app.post("/api/remove")
 async def api_remove(file: UploadFile = File(...)):
-    fg = remove_bg(await file.read())
+    data = await read_limited(file)
+    fg = remove_bg(data)
     buf = io.BytesIO()
     fg.save(buf, "PNG")
     buf.seek(0)
@@ -203,7 +252,27 @@ async def api_composite(
     hue_color: str = Form(None),        # hex — shift product color
     rotation: float = Form(0),          # degrees
 ):
-    fg_img = Image.open(io.BytesIO(await fg.read())).convert("RGBA")
+    # Validate mode
+    if mode not in ALLOWED_MODES:
+        raise HTTPException(400, f"Недопустимый режим. Допустимые: {', '.join(ALLOWED_MODES)}")
+
+    # Clamp scale
+    scale = max(0.3, min(1.1, scale))
+
+    # Validate color
+    if color and not HEX_RE.match(color):
+        raise HTTPException(400, "Недопустимый цвет (ожидается #RRGGBB)")
+
+    # Validate hue_color
+    if hue_color and hue_color not in ("#000000", "none", "") and not HEX_RE.match(hue_color):
+        raise HTTPException(400, "Недопустимый цвет товара (ожидается #RRGGBB)")
+
+    # Truncate prompt
+    if prompt:
+        prompt = prompt[:500].strip()
+
+    fg_data = await read_limited(fg)
+    fg_img = Image.open(io.BytesIO(fg_data)).convert("RGBA")
 
     # Apply rotation
     if rotation and rotation != 0:
@@ -224,9 +293,10 @@ async def api_composite(
         except Exception as e:
             raise HTTPException(502, f"Ошибка генерации фона: {e}")
     elif mode == "bg_file" and bg_file and bg_file.filename:
-        bg_img = Image.open(io.BytesIO(await bg_file.read()))
+        bg_data = await read_limited(bg_file)
+        bg_img = Image.open(io.BytesIO(bg_data))
     elif mode == "bg_name" and bg_name:
-        p = BG_DIR / bg_name
+        p = safe_bg_path(bg_name)
         if not p.exists():
             raise HTTPException(404, "Фон не найден")
         bg_img = Image.open(p)
@@ -243,6 +313,7 @@ async def api_composite(
 
 @app.post("/api/generate-image")
 async def api_generate_image(prompt: str = Form(...)):
+    prompt = prompt[:500].strip()
     try:
         img = await fetch_pollinations(prompt, 1080, 1080)
         return StreamingResponse(to_jpeg(img), media_type="image/jpeg")
@@ -271,7 +342,7 @@ def make_reel_frame(img_data: bytes) -> bytes:
 
 @app.post("/api/reel")
 async def api_reel(image: UploadFile = File(...)):
-    data = await image.read()
+    data = await read_limited(image)
     frame = make_reel_frame(data)
     tmp_in = f"/tmp/{uuid.uuid4().hex}.jpg"
     tmp_out = f"/tmp/{uuid.uuid4().hex}.mp4"
@@ -315,14 +386,15 @@ async def upload_background(file: UploadFile = File(...)):
     ext = Path(file.filename).suffix.lower()
     if ext not in (".jpg", ".jpeg", ".png", ".webp"):
         raise HTTPException(400, "Только JPG/PNG/WEBP")
+    data = await read_limited(file)
     name = f"{uuid.uuid4().hex[:8]}{ext}"
-    (BG_DIR / name).write_bytes(await file.read())
+    (BG_DIR / name).write_bytes(data)
     return {"file": name}
 
 
 @app.delete("/api/backgrounds/{filename}")
 async def delete_background(filename: str):
-    p = BG_DIR / filename
+    p = safe_bg_path(filename)
     if p.exists():
         p.unlink()
     return {"ok": True}
@@ -332,6 +404,9 @@ async def delete_background(filename: str):
 
 @app.get("/api/temp/{img_id}")
 async def serve_temp_image(img_id: str):
+    # Validate img_id is a hex string (uuid.hex format)
+    if not re.match(r'^[0-9a-f]{32}$', img_id):
+        raise HTTPException(400, "Invalid image ID")
     data = TEMP_IMAGES.get(img_id)
     if not data:
         raise HTTPException(404, "Temp image not found")
@@ -340,7 +415,8 @@ async def serve_temp_image(img_id: str):
 
 @app.post("/api/edit-prompt")
 async def api_edit_prompt(request: Request, image: UploadFile = File(...), prompt: str = Form(...)):
-    data = await image.read()
+    prompt = prompt[:500].strip()
+    data = await read_limited(image)
     img_id = uuid.uuid4().hex
     TEMP_IMAGES[img_id] = data
 
@@ -352,7 +428,7 @@ async def api_edit_prompt(request: Request, image: UploadFile = File(...), promp
     img_url = f"{base}/api/temp/{img_id}"
 
     augmented = augment_prompt(prompt)
-    enc = urllib.parse.quote(augmented)
+    enc = urllib.parse.quote(augmented, safe="")
     enc_img = urllib.parse.quote(img_url, safe="")
     seed = uuid.uuid4().int % 99999
     url = (f"https://image.pollinations.ai/prompt/{enc}"
@@ -371,6 +447,7 @@ async def api_edit_prompt(request: Request, image: UploadFile = File(...), promp
 
 @app.get("/api/prompts/popular")
 async def get_popular_prompts(q: str = ""):
+    q = q[:200]
     con = sqlite3.connect(DB_PATH)
     if q:
         rows = con.execute(
@@ -388,8 +465,12 @@ async def get_popular_prompts(q: str = ""):
 @app.post("/api/inpaint")
 async def api_inpaint(request: Request, image: UploadFile = File(...),
                       mask: UploadFile = File(...), prompt: str = Form(...)):
-    img = Image.open(io.BytesIO(await image.read())).convert("RGB")
-    mask_img = Image.open(io.BytesIO(await mask.read())).convert("L")
+    prompt = prompt[:500].strip()
+    img_data = await read_limited(image)
+    mask_data = await read_limited(mask)
+
+    img = Image.open(io.BytesIO(img_data)).convert("RGB")
+    mask_img = Image.open(io.BytesIO(mask_data)).convert("L")
 
     # Scale mask to match image size
     if mask_img.size != img.size:
@@ -416,7 +497,7 @@ async def api_inpaint(request: Request, image: UploadFile = File(...),
 
     base = str(request.base_url).rstrip("/")
     img_url = f"{base}/api/temp/{img_id}"
-    enc = urllib.parse.quote(prompt)
+    enc = urllib.parse.quote(prompt, safe="")
     enc_img = urllib.parse.quote(img_url, safe="")
     seed = uuid.uuid4().int % 99999
     w, h = x2 - x1, y2 - y1
@@ -440,6 +521,9 @@ async def api_inpaint(request: Request, image: UploadFile = File(...),
 
 @app.post("/api/prompts/rate")
 async def rate_prompt(text: str = Form(...), delta: int = Form(...)):
+    text = text[:500]
+    # Clamp delta to -1 / 1
+    delta = max(-1, min(1, delta))
     con = sqlite3.connect(DB_PATH)
     con.execute("UPDATE prompts SET score=score+? WHERE text=?", (delta, text))
     con.commit()

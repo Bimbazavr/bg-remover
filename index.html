@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Приложуха — AI Редактор товаров</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f13;color:#e8e6f0;min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f0f13;color:#e8e6f0;min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
 /* HEADER */
 header{height:56px;padding:0 16px;background:#13111e;border-bottom:1px solid #1e1a2e;display:flex;align-items:center;gap:10px;flex-shrink:0;z-index:100;position:relative}
@@ -121,8 +124,12 @@ input.tinput:focus{border-color:#7c3aed}
 /* CONTENT */
 .content{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-width:0}
 
+/* DROP ZONE */
 .drop-zone{border:2px dashed #2d2842;border-radius:18px;padding:48px 20px;text-align:center;cursor:pointer;transition:all .2s;background:linear-gradient(160deg,#14121f,#0f0e18)}
 .drop-zone:hover,.drop-zone.drag{border-color:#7c3aed;background:#1c1830}
+.drop-zone:not(.has-file){animation:pulseBorder 3s ease-in-out infinite}
+@keyframes pulseBorder{0%,100%{border-color:#2d2842}50%{border-color:#4c1d95}}
+.drop-zone:hover,.drop-zone.drag{animation:none;border-color:#7c3aed}
 .dz-icon{font-size:48px;margin-bottom:12px;line-height:1}
 .dz-title{font-size:15px;font-weight:700;color:#d4cff0;margin-bottom:5px}
 .dz-sub{font-size:12px;color:#5a5270}
@@ -137,19 +144,42 @@ input.tinput:focus{border-color:#7c3aed}
 .img-wrap img{max-width:100%;max-height:280px;display:block}
 .empty-hint{color:#2d2842;font-size:11px}
 
+/* SKELETON */
+.skeleton{background:linear-gradient(90deg,#1a1726 25%,#2d2060 50%,#1a1726 75%);background-size:200% 100%;animation:skeletonAnim 1.5s linear infinite;border-radius:4px}
+@keyframes skeletonAnim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-block{width:100%;height:240px;border-radius:4px}
+
+/* PROGRESS BAR */
+.progress-bar{height:3px;border-radius:2px;background:linear-gradient(90deg,#7c3aed,#e879f9,#7c3aed);background-size:200%;animation:shimmer 1.5s linear infinite;display:none}
+.progress-bar.active{display:block}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* COMPARE SLIDER */
+.compare-wrap{position:relative;overflow:hidden;border-radius:10px;cursor:ew-resize;user-select:none}
+.compare-before{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden}
+.compare-before img{max-width:none;max-height:none;width:100%;height:100%;object-fit:cover;display:block}
+.compare-after img{width:100%;height:100%;object-fit:cover;display:block}
+.compare-slider-line{position:absolute;top:0;left:50%;width:3px;height:100%;background:#a78bfa;transform:translateX(-50%);pointer-events:none;z-index:2}
+.compare-handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;background:#7c3aed;border:2px solid #a78bfa;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4);z-index:3;pointer-events:none}
+
+/* ACTIONS */
 .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{padding:10px 18px;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;display:inline-flex;align-items:center;gap:6px;min-height:42px}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 .btn-p{background:linear-gradient(135deg,#7c3aed,#9d5ff5);color:#fff;box-shadow:0 4px 14px #7c3aed40}
 .btn-p:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
-.btn-p:disabled{opacity:.4;cursor:not-allowed}
 .btn-g{background:#1a1726;color:#a78bfa;border:1.5px solid #2d2842}
-.btn-g:hover{background:#1e1a2e}
+.btn-g:hover:not(:disabled){background:#1e1a2e}
 .btn-regen{background:#1a1020;color:#e879f9;border:1.5px solid #6b21a840}
-.btn-regen:hover{background:#220d2e;border-color:#a855f7}
+.btn-regen:hover:not(:disabled){background:#220d2e;border-color:#a855f7}
 .btn-dl{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
-.btn-dl:hover{opacity:.9;transform:translateY(-1px)}
+.btn-dl:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
 .btn-reel{background:linear-gradient(135deg,#0e7490,#06b6d4);color:#fff}
-.btn-reel:hover{opacity:.9;transform:translateY(-1px)}
+.btn-reel:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.btn-share{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff}
+.btn-share:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+
+kbd{display:inline-block;padding:1px 5px;border-radius:4px;background:#2d2060;border:1px solid #4c1d95;font-size:10px;font-family:inherit;color:#a78bfa;line-height:1.4;vertical-align:middle;margin-left:4px}
 
 .status{padding:10px 14px;border-radius:11px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px}
 .st-info{background:#1a1630;color:#a78bfa;border:1px solid #2d2060}
@@ -210,6 +240,16 @@ input[type=file]{display:none}
 .btn-edit-toggle{padding:6px 12px;border-radius:8px;border:1.5px solid #2d2842;background:#14121f;color:#6b6585;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
 .btn-edit-toggle.active{border-color:#e879f9;color:#e879f9;background:#1a0d20}
 
+/* TOAST */
+.toast-wrap{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:999;pointer-events:none}
+.toast{padding:12px 16px;border-radius:12px;font-size:13px;font-weight:600;max-width:320px;backdrop-filter:blur(12px);animation:toastIn .25s ease;pointer-events:all;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+@keyframes toastIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes toastOut{to{transform:translateX(40px);opacity:0;height:0;padding:0;margin:0}}
+.toast.info{background:rgba(26,22,48,.95);color:#a78bfa;border:1px solid #2d2060}
+.toast.ok{background:rgba(13,31,24,.95);color:#34d399;border:1px solid #0e3325}
+.toast.error{background:rgba(31,15,15,.95);color:#f87171;border:1px solid #5a1515}
+.toast.ai{background:rgba(26,16,32,.95);color:#e879f9;border:1px solid #6b21a840}
+
 /* MOBILE */
 @media(max-width:768px){
   .burger{display:flex}
@@ -223,6 +263,8 @@ input[type=file]{display:none}
   .img-wrap img{max-height:200px}
   .actions{gap:6px}
   .btn{padding:9px 12px;font-size:12px;min-height:38px}
+  .toast-wrap{bottom:12px;right:12px;left:12px}
+  .toast{max-width:100%}
 }
 @media(max-width:480px){
   .preview-row{grid-template-columns:1fr}
@@ -451,7 +493,7 @@ input[type=file]{display:none}
   <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
     <div class="dz-icon">📦</div>
     <div class="dz-title">Перетащи фото товара</div>
-    <div class="dz-sub">или <strong>нажми для выбора</strong> · JPG PNG WEBP до 20 МБ</div>
+    <div class="dz-sub">или <strong>нажми для выбора</strong> · JPG PNG WEBP до 10 МБ</div>
     <div class="dz-actions" onclick="event.stopPropagation()">
       <button class="dz-btn" onclick="document.getElementById('fileInput').click()">🖼️ Из галереи</button>
       <button class="dz-btn" onclick="document.getElementById('cameraInput').click()">📷 Снять фото</button>
@@ -472,9 +514,12 @@ input[type=file]{display:none}
         <span class="dot dot-r"></span>Результат
         <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleInpaint()" style="margin-left:auto;display:none">✏️ Редактировать</button>
       </div>
-      <div class="img-wrap" style="position:relative" id="resultWrap">
-        <img id="resultImg" style="display:none">
+      <!-- progress bar -->
+      <div class="progress-bar" id="progressBar"></div>
+      <div class="img-wrap" style="position:relative;padding:0" id="resultWrap">
+        <img id="resultImg" style="display:none;width:100%;height:auto;max-height:280px;object-fit:contain">
         <span class="empty-hint" id="resultEmpty">нажми «Обработать»</span>
+        <div class="skeleton skeleton-block" id="resultSkeleton" style="display:none"></div>
         <canvas id="inpaintCanvas"></canvas>
       </div>
       <div class="inpaint-panel" id="inpaintPanel">
@@ -499,10 +544,11 @@ input[type=file]{display:none}
   <div id="statusBox"></div>
 
   <div class="actions" id="actionsRow" style="display:none">
-    <button class="btn btn-p" id="processBtn" onclick="runProcess(false)">✨ Обработать</button>
+    <button class="btn btn-p" id="processBtn" onclick="runProcess(false)">✨ Обработать <kbd>⌘↵</kbd></button>
     <button class="btn btn-regen" id="regenBtn" style="display:none" onclick="runProcess(true)">🔄 Ещё раз</button>
     <button class="btn btn-g" onclick="resetPhoto()">📁 Другое фото</button>
     <button class="btn btn-dl" id="dlBtn" style="display:none" onclick="doDownload()">⬇️ Скачать</button>
+    <button class="btn btn-share" id="shareBtn" style="display:none" onclick="shareResult()">📤 Поделиться</button>
   </div>
   <div class="rate-row" id="rateRow" style="display:none">
     <span style="font-size:11px;color:#5a5270">Результат помог?</span>
@@ -514,6 +560,8 @@ input[type=file]{display:none}
 </main>
 </div>
 
+<div id="toastWrap" class="toast-wrap"></div>
+
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────
 let selectedFile=null, fgBlob=null, resultBlob=null;
@@ -523,6 +571,21 @@ let selectedAiPrompt=null, translatedPrompt=null;
 let selectedPrimerkaPrompt=null;
 let selectedHue=null;
 let translateTimer=null, autoTimer=null;
+let origImgUrl=null; // for compare slider
+
+// ── TOAST ─────────────────────────────────────────────────────────────
+function toast(msg, type='info', duration=4000) {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = (type==='ai'?'<div class="spinner"></div>':'')+msg;
+  wrap.appendChild(el);
+  if (duration > 0) setTimeout(() => {
+    el.style.animation = 'toastOut .25s ease forwards';
+    setTimeout(() => el.remove(), 250);
+  }, duration);
+  return el;
+}
 
 // ── MOBILE SIDEBAR ────────────────────────────────────────────────────
 function toggleSidebar(){
@@ -693,12 +756,38 @@ function selRot(deg,el){
 function scheduleAuto(){
   if(!fgBlob||!resultBlob)return;
   if(currentMode==='ai'||currentMode==='primerka'){
-    // just show hint, don't auto-regenerate AI
     document.getElementById('regenBtn').style.display='inline-flex';
     return;
   }
   clearTimeout(autoTimer);
   autoTimer=setTimeout(()=>runProcess(true),450);
+}
+
+// ── PROCESSING STATE ──────────────────────────────────────────────────
+function setProcessing(active) {
+  const btn = document.getElementById('processBtn');
+  const regenBtn = document.getElementById('regenBtn');
+  const progressBar = document.getElementById('progressBar');
+  const skeleton = document.getElementById('resultSkeleton');
+  const resultImg = document.getElementById('resultImg');
+  const resultEmpty = document.getElementById('resultEmpty');
+
+  if (active) {
+    btn.disabled = true;
+    if (regenBtn) regenBtn.disabled = true;
+    progressBar.classList.add('active');
+    if (!resultBlob) {
+      // show skeleton only if no result yet
+      resultImg.style.display = 'none';
+      resultEmpty.style.display = 'none';
+      skeleton.style.display = 'block';
+    }
+  } else {
+    btn.disabled = false;
+    if (regenBtn) regenBtn.disabled = false;
+    progressBar.classList.remove('active');
+    skeleton.style.display = 'none';
+  }
 }
 
 // ── FILE ─────────────────────────────────────────────────────────────
@@ -712,29 +801,40 @@ dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');loadFile(e.dataTran
 
 function loadFile(f){
   if(!f)return;
-  selectedFile=f;fgBlob=null;resultBlob=null;
-  document.getElementById('origImg').src=URL.createObjectURL(f);
+  if(f.size > 10 * 1024 * 1024) {
+    toast('Файл слишком большой (макс. 10 МБ)', 'error');
+    return;
+  }
+  selectedFile=f;fgBlob=null;resultBlob=null;origImgUrl=null;
+  origImgUrl = URL.createObjectURL(f);
+  document.getElementById('origImg').src=origImgUrl;
   document.getElementById('origImg').style.display='block';
   document.getElementById('origEmpty').style.display='none';
   document.getElementById('previewRow').style.display='grid';
   document.getElementById('actionsRow').style.display='flex';
   document.getElementById('dropZone').style.display='none';
+  document.getElementById('dropZone').classList.add('has-file');
   document.getElementById('resultImg').style.display='none';
   document.getElementById('resultEmpty').style.display='block';
   document.getElementById('dlBtn').style.display='none';
+  document.getElementById('shareBtn').style.display='none';
   document.getElementById('regenBtn').style.display='none';
   setStatus('');
+  // remove compare if exists
+  destroyCompare();
 }
 function resetPhoto(){
-  selectedFile=fgBlob=resultBlob=null;
+  selectedFile=fgBlob=resultBlob=origImgUrl=null;
   document.getElementById('dropZone').style.display='';
+  document.getElementById('dropZone').classList.remove('has-file');
   document.getElementById('previewRow').style.display='none';
   document.getElementById('actionsRow').style.display='none';
   setStatus('');document.getElementById('fileInput').value='';
+  destroyCompare();
   document.getElementById('fileInput').click();
 }
 
-// ── STATUS ────────────────────────────────────────────────────────────
+// ── STATUS (kept for inline use, toasts for new actions) ─────────────
 function setStatus(msg,cls='info'){
   const b=document.getElementById('statusBox');
   if(!msg){b.innerHTML='';return;}
@@ -746,44 +846,52 @@ function setStatus(msg,cls='info'){
 async function runProcess(regen=false){
   if(!selectedFile&&currentMode!=='genimg')return;
 
+  setProcessing(true);
   const btn=document.getElementById('processBtn');
-  btn.disabled=true;btn.textContent='Обрабатываю...';
+  btn.innerHTML='<div class="spinner"></div> Обрабатываю...';
 
   const scale=parseFloat(document.getElementById('scaleSlider').value)/100;
   const shadow=document.getElementById('shadowToggle').checked?'true':'false';
   const rotation=currentRotation;
   const hue=selectedHue||'';
 
+  let loadingToast = null;
+
   try{
     // ── Генерация изображения (no product) ──
     if(currentMode==='genimg'){
       const prompt=genImgTranslated||document.getElementById('genImgPrompt').value.trim();
       if(!prompt)throw new Error('Введи промпт для генерации');
-      setStatus('Генерирую изображение (15–40 сек)...','ai');
+      loadingToast = toast('Генерирую изображение (15–40 сек)...', 'ai', 0);
       const fd=new FormData();fd.append('prompt',prompt);
       const r=await fetch('/api/generate-image',{method:'POST',body:fd});
       if(!r.ok)throw new Error(await r.text());
       resultBlob=await r.blob();
       showResult(URL.createObjectURL(resultBlob));
-      setStatus('Готово! 🎉','ok');
-      btn.disabled=false;btn.innerHTML='✨ Обработать';return;
+      loadingToast && loadingToast.remove();
+      toast('Готово! Изображение сгенерировано 🎉', 'ok');
+      setStatus('');
+      return;
     }
 
     // ── Шаг 1: удалить фон ──
     if(!fgBlob){
-      setStatus('1/2 — Удаляю фон...','info');
+      loadingToast = toast('1/2 — Удаляю фон...', 'info', 0);
       const fd=new FormData();fd.append('file',selectedFile);
       const r=await fetch('/api/remove',{method:'POST',body:fd});
       if(!r.ok)throw new Error(await r.text());
       fgBlob=await r.blob();
+      loadingToast && loadingToast.remove();
+      loadingToast = null;
     }
 
     // ── Удаление фона (только PNG) ──
     if(currentMode==='remove'){
       resultBlob=fgBlob;
       showResult(URL.createObjectURL(fgBlob));
-      setStatus('Фон удалён! 🎉','ok');
-      btn.disabled=false;btn.innerHTML='✨ Обработать';return;
+      toast('Фон удалён! 🎉', 'ok');
+      setStatus('');
+      return;
     }
 
     // ── Шаг 2: composite ──
@@ -799,29 +907,34 @@ async function runProcess(regen=false){
       const p=selectedAiPrompt||translatedPrompt;
       if(!p)throw new Error('Выбери пресет или введи промпт');
       fd.append('mode','generate');fd.append('prompt',p);
-      setStatus('2/2 — Генерирую AI-фон (15–40 сек)...','ai');
+      loadingToast = toast('2/2 — Генерирую AI-фон (15–40 сек)...', 'ai', 0);
     } else if(currentMode==='primerka'){
       if(!selectedPrimerkaPrompt)throw new Error('Выбери сцену для примерки');
       fd.append('mode','generate');fd.append('prompt',selectedPrimerkaPrompt);
-      setStatus('2/2 — AI-примерка (15–40 сек)...','ai');
+      loadingToast = toast('2/2 — AI-примерка (15–40 сек)...', 'ai', 0);
     } else if(currentMode==='color'){
       fd.append('mode','color');fd.append('color',selectedBgColor);
-      setStatus('2/2 — Накладываю цвет...','info');
+      loadingToast = toast('Накладываю цвет...', 'info', 0);
     } else if(currentMode==='custom'){
       if(selectedBgName){fd.append('mode','bg_name');fd.append('bg_name',selectedBgName);}
       else throw new Error('Выбери фон из библиотеки');
-      setStatus('2/2 — Накладываю фон...','info');
+      loadingToast = toast('Накладываю фон...', 'info', 0);
     }
 
     const r2=await fetch('/api/composite',{method:'POST',body:fd});
     if(!r2.ok)throw new Error(await r2.text());
     resultBlob=await r2.blob();
     showResult(URL.createObjectURL(resultBlob));
-    setStatus('Готово! 🎉','ok');
+    loadingToast && loadingToast.remove();
+    toast('Готово! 🎉', 'ok');
+    setStatus('');
   }catch(e){
-    setStatus('Ошибка: '+e.message,'error');
+    loadingToast && loadingToast.remove();
+    toast('Ошибка: '+e.message, 'error');
+    setStatus('Ошибка: '+e.message, 'error');
   }finally{
-    btn.disabled=false;btn.innerHTML='✨ Обработать';
+    setProcessing(false);
+    btn.innerHTML='✨ Обработать <kbd>⌘↵</kbd>';
   }
 }
 
@@ -830,13 +943,111 @@ function showResult(url){
   img.src=url;
   img.style.display='block';
   document.getElementById('resultEmpty').style.display='none';
+  document.getElementById('resultSkeleton').style.display='none';
   document.getElementById('dlBtn').style.display='inline-flex';
+  document.getElementById('shareBtn').style.display='inline-flex';
   document.getElementById('regenBtn').style.display='inline-flex';
   document.getElementById('editToggleBtn').style.display='inline-flex';
   // reset inpaint state
   if (inpaintActive) toggleInpaint();
-  // sync canvas after image loads
-  img.onload = () => { if (inpaintActive) syncCanvas(); };
+  // sync canvas and setup compare after image loads
+  img.onload = () => {
+    if (inpaintActive) syncCanvas();
+    setupCompare(url);
+  };
+  // if already loaded
+  if (img.complete && img.naturalWidth) {
+    setupCompare(url);
+  }
+}
+
+// ── COMPARE SLIDER ────────────────────────────────────────────────────
+let compareActive = false;
+let compareDragging = false;
+let compareWrapEl = null;
+
+function setupCompare(resultUrl) {
+  if (!origImgUrl || !resultUrl || currentMode === 'remove') {
+    destroyCompare();
+    return;
+  }
+  destroyCompare();
+
+  const wrap = document.getElementById('resultWrap');
+  const img = document.getElementById('resultImg');
+  if (!img.offsetHeight) return;
+
+  // Build compare DOM
+  compareWrapEl = document.createElement('div');
+  compareWrapEl.className = 'compare-wrap';
+  compareWrapEl.style.cssText = `width:100%;height:${img.offsetHeight}px`;
+
+  const after = document.createElement('div');
+  after.className = 'compare-after';
+  after.style.cssText = 'width:100%;height:100%';
+  const aImg = document.createElement('img');
+  aImg.src = resultUrl;
+  aImg.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block';
+  after.appendChild(aImg);
+
+  const before = document.createElement('div');
+  before.className = 'compare-before';
+  before.style.cssText = 'position:absolute;top:0;left:0;height:100%;overflow:hidden;width:50%';
+  const bImg = document.createElement('img');
+  bImg.src = origImgUrl;
+  bImg.style.cssText = 'width:'+wrap.offsetWidth+'px;height:100%;object-fit:contain;display:block;max-width:none';
+  before.appendChild(bImg);
+
+  const sliderLine = document.createElement('div');
+  sliderLine.className = 'compare-slider-line';
+
+  const handle = document.createElement('div');
+  handle.className = 'compare-handle';
+  handle.textContent = '↔';
+
+  compareWrapEl.appendChild(after);
+  compareWrapEl.appendChild(before);
+  compareWrapEl.appendChild(sliderLine);
+  compareWrapEl.appendChild(handle);
+
+  // hide original img, insert compare
+  img.style.display = 'none';
+  wrap.appendChild(compareWrapEl);
+  compareActive = true;
+
+  function updateSlider(clientX) {
+    const rect = compareWrapEl.getBoundingClientRect();
+    let pct = (clientX - rect.left) / rect.width;
+    pct = Math.max(0.02, Math.min(0.98, pct));
+    const pctPx = (pct * 100).toFixed(1) + '%';
+    before.style.width = pctPx;
+    bImg.style.width = compareWrapEl.offsetWidth + 'px';
+    sliderLine.style.left = pctPx;
+    handle.style.left = pctPx;
+  }
+
+  compareWrapEl.addEventListener('mousedown', e => {
+    compareDragging = true;
+    updateSlider(e.clientX);
+  });
+  compareWrapEl.addEventListener('touchstart', e => {
+    compareDragging = true;
+    updateSlider(e.touches[0].clientX);
+  }, {passive:true});
+  document.addEventListener('mousemove', e => { if(compareDragging) updateSlider(e.clientX); });
+  document.addEventListener('touchmove', e => { if(compareDragging) updateSlider(e.touches[0].clientX); }, {passive:true});
+  document.addEventListener('mouseup', () => compareDragging = false);
+  document.addEventListener('touchend', () => compareDragging = false);
+}
+
+function destroyCompare() {
+  if (compareWrapEl) {
+    compareWrapEl.remove();
+    compareWrapEl = null;
+  }
+  compareActive = false;
+  const img = document.getElementById('resultImg');
+  if (resultBlob) img.style.display = 'block';
 }
 
 function doDownload(){
@@ -847,10 +1058,27 @@ function doDownload(){
   a.click();
 }
 
+async function shareResult() {
+  if (!resultBlob) return;
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file = new File([resultBlob], 'product.jpg', {type: resultBlob.type || 'image/jpeg'});
+      if (navigator.canShare({files: [file]})) {
+        await navigator.share({files: [file], title: 'AI Фото товара'});
+        return;
+      }
+    } catch(e) {
+      if (e.name !== 'AbortError') doDownload();
+      return;
+    }
+  }
+  doDownload();
+}
+
 // ── REEL ──────────────────────────────────────────────────────────────
 async function createReel(){
-  if(!resultBlob){setStatus('Сначала обработай фото','error');return;}
-  setStatus('Создаю рилс (30–60 сек)...','ai');
+  if(!resultBlob){toast('Сначала обработай фото','error');return;}
+  const t = toast('Создаю рилс (30–60 сек)...','ai', 0);
   try{
     const fd=new FormData();fd.append('image',resultBlob,'img.jpg');
     const r=await fetch('/api/reel',{method:'POST',body:fd});
@@ -858,8 +1086,9 @@ async function createReel(){
     const blob=await r.blob();
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download=`reel_${Date.now()}.mp4`;a.click();
-    setStatus('Рилс готов! Скачивается... 🎬','ok');
-  }catch(e){setStatus('Ошибка: '+e.message,'error');}
+    t.remove();
+    toast('Рилс готов! Скачивается... 🎬','ok');
+  }catch(e){t.remove();toast('Ошибка рилс: '+e.message,'error');}
 }
 
 // ── BACKGROUNDS ───────────────────────────────────────────────────────
@@ -909,23 +1138,21 @@ quickEl.addEventListener('input', function() {
 async function runQuickPrompt() {
   const raw = quickEl.value.trim();
   if (!raw) {
-    // no prompt — just open file picker
     document.getElementById('fileInput').click();
     return;
   }
   const prompt = quickPromptTranslated || raw;
-  // If no photo loaded — open file picker (prompt will be remembered)
   if (!selectedFile && !resultBlob) {
     document.getElementById('fileInput').click();
     return;
   }
-  // If we have a result blob — treat as inpaint-all (edit-prompt on the result)
   const sourceBlob = resultBlob || fgBlob;
   if (sourceBlob) {
     document.getElementById('editPromptInput').value = raw;
     editPromptTranslated = prompt;
     currentEditPrompt = raw;
-    setStatus('✍️ Применяю запрос (15–40 сек)...', 'ai');
+    const t = toast('✍️ Применяю запрос (15–40 сек)...', 'ai', 0);
+    setProcessing(true);
     try {
       const fd = new FormData();
       fd.append('image', sourceBlob, 'img.jpg');
@@ -934,12 +1161,18 @@ async function runQuickPrompt() {
       if (!r.ok) throw new Error(await r.text());
       resultBlob = await r.blob();
       showResult(URL.createObjectURL(resultBlob));
-      setStatus('Готово! 🎉', 'ok');
+      t.remove();
+      toast('Готово! 🎉', 'ok');
       document.getElementById('rateRow').style.display = 'flex';
-    } catch(e) { setStatus('Ошибка: ' + e.message, 'error'); }
+    } catch(e) {
+      t.remove();
+      toast('Ошибка: ' + e.message, 'error');
+      setStatus('Ошибка: ' + e.message, 'error');
+    } finally {
+      setProcessing(false);
+    }
     return;
   }
-  // Have file but no result — process with edit-prompt after bg remove
   await runProcess(false);
 }
 
@@ -974,7 +1207,6 @@ function clearMask() {
 
 function getBrushSize() {
   const disp = parseInt(document.getElementById('brushSize').value);
-  // scale from display size to actual canvas size
   const img = document.getElementById('resultImg');
   const scale = (img.naturalWidth || canvas.width) / img.offsetWidth;
   return Math.round(disp * scale);
@@ -1017,17 +1249,16 @@ canvas.addEventListener('touchend', () => isPainting = false);
 
 async function runInpaint() {
   const prompt = document.getElementById('inpaintPrompt').value.trim();
-  if (!prompt) { setStatus('Введи что изменить в области', 'error'); return; }
-  if (!resultBlob && !fgBlob) { setStatus('Сначала обработай фото', 'error'); return; }
+  if (!prompt) { toast('Введи что изменить в области', 'error'); return; }
+  if (!resultBlob && !fgBlob) { toast('Сначала обработай фото', 'error'); return; }
 
-  // Check mask has content
   const pd = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
   const hasMask = pd.some((v, i) => i % 4 === 3 && v > 10);
-  if (!hasMask) { setStatus('Закрась область кистью на фото', 'error'); return; }
+  if (!hasMask) { toast('Закрась область кистью на фото', 'error'); return; }
 
-  setStatus('✍️ Редактирую область (15–40 сек)...', 'ai');
+  const t = toast('✍️ Редактирую область (15–40 сек)...', 'ai', 0);
+  setProcessing(true);
 
-  // Build mask: white where painted, black elsewhere
   const maskCanvas = document.createElement('canvas');
   maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
   const mctx = maskCanvas.getContext('2d');
@@ -1042,12 +1273,11 @@ async function runInpaint() {
   }
   mctx.putImageData(out, 0, 0);
 
-  // Translate prompt
-  let translatedPrompt = prompt;
+  let translatedInpaintPrompt = prompt;
   try {
     const tf = new FormData(); tf.append('text', prompt);
     const tr = await fetch('/api/translate', {method:'POST', body:tf});
-    translatedPrompt = (await tr.json()).result;
+    translatedInpaintPrompt = (await tr.json()).result;
   } catch {}
 
   try {
@@ -1055,16 +1285,22 @@ async function runInpaint() {
     const fd = new FormData();
     fd.append('image', resultBlob || fgBlob, 'img.jpg');
     fd.append('mask', maskBlob, 'mask.png');
-    fd.append('prompt', translatedPrompt);
+    fd.append('prompt', translatedInpaintPrompt);
     const r = await fetch('/api/inpaint', {method: 'POST', body: fd});
     if (!r.ok) throw new Error(await r.text());
     resultBlob = await r.blob();
     showResult(URL.createObjectURL(resultBlob));
     clearMask();
-    setStatus('Область изменена! ✏️', 'ok');
+    t.remove();
+    toast('Область изменена! ✏️', 'ok');
     currentEditPrompt = prompt;
     document.getElementById('rateRow').style.display = 'flex';
-  } catch(e) { setStatus('Ошибка: ' + e.message, 'error'); }
+  } catch(e) {
+    t.remove();
+    toast('Ошибка: ' + e.message, 'error');
+  } finally {
+    setProcessing(false);
+  }
 }
 
 // ── EDIT BY PROMPT ────────────────────────────────────────────────────
@@ -1114,12 +1350,13 @@ function selectAcItem(text) {
 }
 
 async function runEditPrompt() {
-  if (!resultBlob && !fgBlob) { setStatus('Сначала загрузи и обработай фото', 'error'); return; }
+  if (!resultBlob && !fgBlob) { toast('Сначала загрузи и обработай фото', 'error'); return; }
   const rawPrompt = editEl.value.trim();
-  if (!rawPrompt) { setStatus('Введи промпт для редактирования', 'error'); return; }
+  if (!rawPrompt) { toast('Введи промпт для редактирования', 'error'); return; }
   const prompt = editPromptTranslated || rawPrompt;
   currentEditPrompt = rawPrompt;
-  setStatus('✍️ Редактирую по промпту (15–40 сек)...', 'ai');
+  const t = toast('✍️ Редактирую по промпту (15–40 сек)...', 'ai', 0);
+  setProcessing(true);
   document.getElementById('rateRow').style.display = 'none';
   try {
     const fd = new FormData();
@@ -1129,12 +1366,20 @@ async function runEditPrompt() {
     if (!r.ok) throw new Error(await r.text());
     resultBlob = await r.blob();
     showResult(URL.createObjectURL(resultBlob));
-    setStatus('Готово! Оцени результат ↓', 'ok');
+    t.remove();
+    toast('Готово! Оцени результат ↓', 'ok');
     document.getElementById('rateRow').style.display = 'flex';
     document.getElementById('rateLike').className = 'rate-btn';
     document.getElementById('rateDislike').className = 'rate-btn';
     document.getElementById('rateThx').textContent = '';
-  } catch(e) { setStatus('Ошибка: ' + e.message, 'error'); }
+    setStatus('');
+  } catch(e) {
+    t.remove();
+    toast('Ошибка: ' + e.message, 'error');
+    setStatus('Ошибка: ' + e.message, 'error');
+  } finally {
+    setProcessing(false);
+  }
 }
 
 async function rateCurrentPrompt(delta) {
@@ -1149,6 +1394,17 @@ async function rateCurrentPrompt(delta) {
     document.getElementById('rateThx').textContent = delta > 0 ? '🧠 Учтено!' : '🧠 Понял, учтём';
   } catch {}
 }
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runProcess(false);
+  }
+  if (e.key === 'Escape') {
+    if (inpaintActive) toggleInpaint();
+  }
+});
 
 loadBgs();
 </script>
