@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir fastapi "uvicorn[standard]" pillow python-multipart \
+RUN pip install --no-cache-dir fastapi "uvicorn[standard]" pillow python-multipart httpx \
     "numpy<3" onnxruntime scikit-image scipy tqdm pooch requests jsonschema && \
     pip install --no-cache-dir --no-deps rembg
 
