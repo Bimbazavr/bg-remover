@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: bg-remover
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8001
+    disk:
+      name: backgrounds
+      mountPath: /app/backgrounds
+      sizeGB: 1
