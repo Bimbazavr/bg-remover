@@ -161,6 +161,26 @@ input.tinput:focus{border-color:#7c3aed}
 
 input[type=file]{display:none}
 
+/* CAMERA BUTTON */
+.dz-actions{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.dz-btn{padding:8px 16px;border-radius:10px;border:1.5px solid #2d2842;background:#14121f;color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:5px}
+.dz-btn:hover{border-color:#7c3aed;background:#1a1630}
+
+/* AUTOCOMPLETE */
+.ac-wrap{position:relative}
+.ac-drop{position:absolute;top:100%;left:0;right:0;background:#1a1726;border:1.5px solid #2d2842;border-radius:0 0 9px 9px;max-height:160px;overflow-y:auto;z-index:200;display:none}
+.ac-item{padding:7px 10px;font-size:11px;color:#c4b5fd;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.ac-item:hover{background:#2d1f5e}
+.ac-item .ac-cnt{font-size:9px;color:#5a5270}
+.learn-badge{font-size:9px;font-weight:700;background:#34d39922;color:#34d399;border:1px solid #34d39944;border-radius:4px;padding:1px 5px;margin-top:2px;display:inline-block}
+
+/* RATING */
+.rate-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.rate-btn{padding:5px 10px;border-radius:7px;border:1.5px solid #1e1a2e;background:#14121f;color:#6b6585;font-size:12px;cursor:pointer;font-family:inherit;transition:.12s}
+.rate-btn:hover{border-color:#7c3aed}
+.rate-btn.liked{border-color:#34d399;color:#34d399;background:#0d1f18}
+.rate-btn.disliked{border-color:#f87171;color:#f87171;background:#1f0f0f}
+
 /* MOBILE */
 @media(max-width:768px){
   .burger{display:flex}
@@ -284,9 +304,29 @@ input[type=file]{display:none}
     </div>
   </div>
 
+  <!-- 7. Редактировать по промпту -->
+  <div class="sec" id="sec-editprompt">
+    <div class="sec-hdr" onclick="activate('editprompt')">
+      <div class="s-ic">✍️</div><span class="s-name">Редакт. по промпту</span><span class="s-arrow">▾</span>
+    </div>
+    <div class="sec-body">
+      <div style="font-size:10px;color:#5a5270;line-height:1.5">Опиши что изменить — цвет, стиль, фон, освещение. ИИ учится на промптах всех пользователей.</div>
+      <span class="learn-badge">🧠 Обучается на данных</span>
+      <div>
+        <div class="lbl">Промпт изменения</div>
+        <div class="ac-wrap">
+          <textarea class="tinput" id="editPromptInput" rows="2" placeholder="Например: сделай фон розовым, добавь тени..."></textarea>
+          <div class="ac-drop" id="acDrop"></div>
+        </div>
+        <div class="tr-badge" id="editPromptBadge">· автоперевод</div>
+      </div>
+      <button class="btn btn-p" onclick="runEditPrompt()" style="width:100%;justify-content:center">✍️ Применить</button>
+    </div>
+  </div>
+
   <div class="sdiv"></div>
 
-  <!-- 7. Редактирование -->
+  <!-- 8. Редактирование -->
   <div class="sec open" id="sec-edit">
     <div class="sec-hdr" onclick="toggleSec('sec-edit')">
       <div class="s-ic">✏️</div><span class="s-name">Редактирование</span><span class="s-arrow">▾</span>
@@ -368,9 +408,14 @@ input[type=file]{display:none}
     <div class="dz-icon">📦</div>
     <div class="dz-title">Перетащи фото товара</div>
     <div class="dz-sub">или <strong>нажми для выбора</strong> · JPG PNG WEBP до 20 МБ</div>
+    <div class="dz-actions" onclick="event.stopPropagation()">
+      <button class="dz-btn" onclick="document.getElementById('fileInput').click()">🖼️ Из галереи</button>
+      <button class="dz-btn" onclick="document.getElementById('cameraInput').click()">📷 Снять фото</button>
+    </div>
   </div>
 
   <input type="file" id="fileInput" accept="image/*">
+  <input type="file" id="cameraInput" accept="image/*" capture="environment">
   <input type="file" id="bgUpload" accept="image/*">
 
   <div class="preview-row" id="previewRow" style="display:none">
@@ -391,6 +436,12 @@ input[type=file]{display:none}
     <button class="btn btn-regen" id="regenBtn" style="display:none" onclick="runProcess(true)">🔄 Ещё раз</button>
     <button class="btn btn-g" onclick="resetPhoto()">📁 Другое фото</button>
     <button class="btn btn-dl" id="dlBtn" style="display:none" onclick="doDownload()">⬇️ Скачать</button>
+  </div>
+  <div class="rate-row" id="rateRow" style="display:none">
+    <span style="font-size:11px;color:#5a5270">Результат помог?</span>
+    <button class="rate-btn" id="rateLike" onclick="rateCurrentPrompt(1)">👍 Да</button>
+    <button class="rate-btn" id="rateDislike" onclick="rateCurrentPrompt(-1)">👎 Нет</button>
+    <span style="font-size:10px;color:#34d399;min-width:80px" id="rateThx"></span>
   </div>
 
 </main>
@@ -419,7 +470,7 @@ function closeSidebar(){
 }
 
 // ── SECTION LOGIC ─────────────────────────────────────────────────────
-const TOOL_SECS=['remove','ai','color','custom','genimg','primerka'];
+const TOOL_SECS=['remove','ai','color','custom','genimg','primerka','editprompt'];
 function activate(name){
   currentMode=name;
   TOOL_SECS.forEach(s=>{
@@ -585,6 +636,7 @@ function scheduleAuto(){
 
 // ── FILE ─────────────────────────────────────────────────────────────
 document.getElementById('fileInput').onchange=e=>loadFile(e.target.files[0]);
+document.getElementById('cameraInput').onchange=e=>loadFile(e.target.files[0]);
 document.getElementById('bgUpload').onchange=e=>uploadBg(e.target.files[0]);
 const dz=document.getElementById('dropZone');
 dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};
@@ -759,6 +811,89 @@ async function uploadBg(f){
 async function delBg(e,file){
   e.stopPropagation();if(!confirm('Удалить?'))return;
   await fetch(`/api/backgrounds/${file}`,{method:'DELETE'});loadBgs();
+}
+
+// ── EDIT BY PROMPT ────────────────────────────────────────────────────
+let editPromptTranslated = null, editPromptTimer = null, currentEditPrompt = null;
+
+const editEl = document.getElementById('editPromptInput');
+const acDrop = document.getElementById('acDrop');
+
+editEl.addEventListener('input', function() {
+  const v = this.value.trim();
+  editPromptTranslated = null;
+  clearTimeout(editPromptTimer);
+  acDrop.style.display = 'none';
+  if (!v) { setBadge('editPromptBadge', '· автоперевод', ''); return; }
+  setBadge('editPromptBadge', 'Перевожу...', 'loading');
+  editPromptTimer = setTimeout(async () => {
+    try {
+      const fd = new FormData(); fd.append('text', v);
+      const r = await fetch('/api/translate', {method:'POST', body:fd});
+      const d = await r.json();
+      editPromptTranslated = d.result;
+      setBadge('editPromptBadge', '→ ' + d.result.slice(0, 50) + (d.result.length > 50 ? '...' : ''), 'ok');
+    } catch { editPromptTranslated = v; setBadge('editPromptBadge', 'Перевод недоступен', ''); }
+    try {
+      const res = await fetch('/api/prompts/popular?q=' + encodeURIComponent(v));
+      const items = await res.json();
+      if (items.length) {
+        acDrop.innerHTML = items.map(it =>
+          `<div class="ac-item" onclick="selectAcItem(${JSON.stringify(it.text)})">
+            <span>${it.text}</span>
+            <span class="ac-cnt">× ${it.count}</span>
+          </div>`
+        ).join('');
+        acDrop.style.display = 'block';
+      }
+    } catch {}
+  }, 700);
+});
+
+editEl.addEventListener('blur', () => setTimeout(() => acDrop.style.display = 'none', 200));
+
+function selectAcItem(text) {
+  editEl.value = text;
+  editPromptTranslated = null;
+  acDrop.style.display = 'none';
+  setBadge('editPromptBadge', '· автоперевод', '');
+}
+
+async function runEditPrompt() {
+  if (!resultBlob && !fgBlob) { setStatus('Сначала загрузи и обработай фото', 'error'); return; }
+  const rawPrompt = editEl.value.trim();
+  if (!rawPrompt) { setStatus('Введи промпт для редактирования', 'error'); return; }
+  const prompt = editPromptTranslated || rawPrompt;
+  currentEditPrompt = rawPrompt;
+  setStatus('✍️ Редактирую по промпту (15–40 сек)...', 'ai');
+  document.getElementById('rateRow').style.display = 'none';
+  try {
+    const fd = new FormData();
+    fd.append('image', resultBlob || fgBlob, 'img.jpg');
+    fd.append('prompt', prompt);
+    const r = await fetch('/api/edit-prompt', {method: 'POST', body: fd});
+    if (!r.ok) throw new Error(await r.text());
+    resultBlob = await r.blob();
+    showResult(URL.createObjectURL(resultBlob));
+    setStatus('Готово! Оцени результат ↓', 'ok');
+    document.getElementById('rateRow').style.display = 'flex';
+    document.getElementById('rateLike').className = 'rate-btn';
+    document.getElementById('rateDislike').className = 'rate-btn';
+    document.getElementById('rateThx').textContent = '';
+  } catch(e) { setStatus('Ошибка: ' + e.message, 'error'); }
+}
+
+async function rateCurrentPrompt(delta) {
+  if (!currentEditPrompt) return;
+  try {
+    const fd = new FormData();
+    fd.append('text', currentEditPrompt);
+    fd.append('delta', delta);
+    await fetch('/api/prompts/rate', {method: 'POST', body: fd});
+    document.getElementById('rateLike').className = 'rate-btn' + (delta > 0 ? ' liked' : '');
+    document.getElementById('rateDislike').className = 'rate-btn' + (delta < 0 ? ' disliked' : '');
+    document.getElementById('rateThx').textContent = delta > 0 ? '🧠 Учтено!' : '🧠 Понял, учтём';
+  } catch {}
 }
 
 loadBgs();

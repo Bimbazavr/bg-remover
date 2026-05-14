@@ -1,9 +1,9 @@
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from rembg import remove, new_session
 from PIL import Image, ImageFilter
-import io, os, uuid, base64, subprocess, httpx, numpy as np
+import io, os, uuid, base64, subprocess, httpx, numpy as np, sqlite3, urllib.parse
 from pathlib import Path
 
 app = FastAPI()
@@ -13,6 +13,61 @@ BG_DIR = Path(__file__).parent / "backgrounds"
 BG_DIR.mkdir(exist_ok=True)
 session = new_session("u2net")
 OUT_W, OUT_H = 1080, 1080
+
+DB_PATH = Path(__file__).parent / "prompts.db"
+TEMP_IMAGES: dict = {}  # img_id -> bytes (in-memory temp storage)
+
+
+def init_db():
+    con = sqlite3.connect(DB_PATH)
+    con.execute("""CREATE TABLE IF NOT EXISTS prompts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        text TEXT NOT NULL,
+        count INTEGER DEFAULT 1,
+        score INTEGER DEFAULT 0,
+        UNIQUE(text)
+    )""")
+    con.commit()
+    con.close()
+
+
+def record_prompt(text: str):
+    con = sqlite3.connect(DB_PATH)
+    con.execute("""INSERT INTO prompts(text,count) VALUES(?,1)
+        ON CONFLICT(text) DO UPDATE SET count=count+1""", (text,))
+    con.commit()
+    con.close()
+
+
+def augment_prompt(prompt: str) -> str:
+    """Enhance prompt using vocabulary from highest-rated historical prompts."""
+    try:
+        con = sqlite3.connect(DB_PATH)
+        # Get top prompts by combined score (usage × rating)
+        rows = con.execute(
+            "SELECT text FROM prompts WHERE score >= 0 ORDER BY (count + score * 3) DESC LIMIT 15"
+        ).fetchall()
+        con.close()
+        if not rows:
+            return prompt
+        prompt_words = set(prompt.lower().split())
+        extra_words: list[str] = []
+        for (text,) in rows:
+            for word in text.lower().split():
+                if len(word) > 4 and word not in prompt_words and word not in extra_words:
+                    extra_words.append(word)
+                if len(extra_words) >= 5:
+                    break
+            if len(extra_words) >= 5:
+                break
+        if extra_words:
+            return prompt + ", " + ", ".join(extra_words[:3])
+    except Exception:
+        pass
+    return prompt
+
+
+init_db()
 
 
 # ── HELPERS ──────────────────────────────────────────────────────────────
@@ -252,4 +307,70 @@ async def delete_background(filename: str):
     p = BG_DIR / filename
     if p.exists():
         p.unlink()
+    return {"ok": True}
+
+
+# ── PROMPT LEARNING ──────────────────────────────────────────────────────
+
+@app.get("/api/temp/{img_id}")
+async def serve_temp_image(img_id: str):
+    data = TEMP_IMAGES.get(img_id)
+    if not data:
+        raise HTTPException(404, "Temp image not found")
+    return StreamingResponse(io.BytesIO(data), media_type="image/jpeg")
+
+
+@app.post("/api/edit-prompt")
+async def api_edit_prompt(request: Request, image: UploadFile = File(...), prompt: str = Form(...)):
+    data = await image.read()
+    img_id = uuid.uuid4().hex
+    TEMP_IMAGES[img_id] = data
+
+    # Keep memory bounded
+    if len(TEMP_IMAGES) > 30:
+        del TEMP_IMAGES[next(iter(TEMP_IMAGES))]
+
+    base = str(request.base_url).rstrip("/")
+    img_url = f"{base}/api/temp/{img_id}"
+
+    augmented = augment_prompt(prompt)
+    enc = urllib.parse.quote(augmented)
+    enc_img = urllib.parse.quote(img_url, safe="")
+    seed = uuid.uuid4().int % 99999
+    url = (f"https://image.pollinations.ai/prompt/{enc}"
+           f"?image={enc_img}&width=1080&height=1080&nologo=true&seed={seed}")
+
+    record_prompt(prompt)
+
+    try:
+        async with httpx.AsyncClient(timeout=90, follow_redirects=True) as c:
+            r = await c.get(url)
+            r.raise_for_status()
+        return StreamingResponse(io.BytesIO(r.content), media_type="image/jpeg")
+    finally:
+        TEMP_IMAGES.pop(img_id, None)
+
+
+@app.get("/api/prompts/popular")
+async def get_popular_prompts(q: str = ""):
+    con = sqlite3.connect(DB_PATH)
+    if q:
+        rows = con.execute(
+            "SELECT text, count, score FROM prompts WHERE text LIKE ? ORDER BY (count + score*3) DESC LIMIT 20",
+            (f"%{q}%",)
+        ).fetchall()
+    else:
+        rows = con.execute(
+            "SELECT text, count, score FROM prompts ORDER BY (count + score*3) DESC LIMIT 20"
+        ).fetchall()
+    con.close()
+    return [{"text": r[0], "count": r[1], "score": r[2]} for r in rows]
+
+
+@app.post("/api/prompts/rate")
+async def rate_prompt(text: str = Form(...), delta: int = Form(...)):
+    con = sqlite3.connect(DB_PATH)
+    con.execute("UPDATE prompts SET score=score+? WHERE text=?", (delta, text))
+    con.commit()
+    con.close()
     return {"ok": True}
