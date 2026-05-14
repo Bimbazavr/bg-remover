@@ -3,603 +3,762 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Приложуха — Замена фона товаров</title>
+<title>Приложуха — AI Редактор товаров</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f0f13; color: #e8e6f0; min-height: 100vh; display: flex; flex-direction: column; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f13;color:#e8e6f0;min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-/* ── HEADER ── */
-header {
-  height: 58px; padding: 0 24px; background: #13111e;
-  border-bottom: 1px solid #1e1a2e; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+/* HEADER */
+header{height:56px;padding:0 16px;background:#13111e;border-bottom:1px solid #1e1a2e;display:flex;align-items:center;gap:10px;flex-shrink:0;z-index:100;position:relative}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#f472b6);display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-name{font-size:15px;font-weight:800}
+.logo-name span{background:linear-gradient(135deg,#a78bfa,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-tag{font-size:9px;font-weight:700;background:#7c3aed22;color:#a78bfa;border:1px solid #7c3aed44;border-radius:4px;padding:2px 5px}
+.burger{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:8px;margin-left:-4px;border-radius:8px}
+.burger span{width:20px;height:2px;background:#a78bfa;border-radius:2px;transition:.2s}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.process-btn-top{display:none}
+
+/* APP */
+.app{display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px)}
+
+/* BACKDROP (mobile) */
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:49;top:56px}
+.backdrop.show{display:block}
+
+/* SIDEBAR */
+.sidebar{width:248px;min-width:248px;background:#0c0b14;border-right:1px solid #1a1726;overflow-y:auto;display:flex;flex-direction:column;z-index:50;transition:transform .25s ease}
+.sec{border-bottom:1px solid #141220}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;transition:background .12s;user-select:none;min-height:48px}
+.sec-hdr:hover{background:#14121f}
+.sec.active>.sec-hdr,.sec.open>.sec-hdr{background:#1a1630}
+.sec.active>.sec-hdr .s-name,.sec.open>.sec-hdr .s-name{color:#c4b5fd}
+.s-ic{width:30px;height:30px;border-radius:8px;background:#1a1726;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:.15s}
+.sec.active>.sec-hdr .s-ic,.sec.open>.sec-hdr .s-ic{background:#2d1f5e}
+.s-name{flex:1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#6b6585}
+.s-badge-soon{font-size:9px;color:#3d3660;font-weight:600}
+.s-badge-beta{font-size:9px;font-weight:700;background:#bef264;color:#1a2e05;border-radius:4px;padding:1px 5px}
+.s-arrow{font-size:9px;color:#3d3660;transition:transform .2s;flex-shrink:0}
+.sec.open>.sec-hdr .s-arrow{transform:rotate(180deg)}
+.sec-body{display:none;padding:0 12px 14px;flex-direction:column;gap:10px}
+.sec.open>.sec-body{display:flex}
+.sec.coming>.sec-hdr{opacity:.4;cursor:default}
+.sec.coming>.sec-hdr:hover{background:transparent}
+
+.lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#5a5270;margin-bottom:5px}
+
+/* AI GRID */
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ai-card{border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;border:1.5px solid #1e1a2e;transition:all .12s;background:#14121f}
+.ai-card:hover{border-color:#7c3aed;background:#1a1630}
+.ai-card.active{border-color:#a78bfa;background:#1c1838}
+.ai-card .ic{font-size:20px;display:block;margin-bottom:4px}
+.ai-card .nm{font-size:10px;font-weight:700;color:#9990b0;line-height:1.3}
+.ai-card.active .nm{color:#c4b5fd}
+
+textarea.tinput{width:100%;padding:9px 10px;background:#14121f;border:1.5px solid #1e1a2e;border-radius:9px;color:#d4cff0;font-size:12px;font-family:inherit;resize:none;transition:.15s;outline:none}
+textarea.tinput:focus{border-color:#7c3aed}
+input.tinput{width:100%;padding:8px 10px;background:#14121f;border:1.5px solid #1e1a2e;border-radius:9px;color:#d4cff0;font-size:12px;font-family:inherit;outline:none;transition:.15s}
+input.tinput:focus{border-color:#7c3aed}
+.tr-badge{font-size:10px;color:#3d3660;margin-top:3px}
+.tr-badge.ok{color:#34d399}.tr-badge.loading{color:#a78bfa}
+
+/* COLORS */
+.color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.swatch{width:100%;aspect-ratio:1;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:.12s}
+.swatch:hover,.swatch.active{border-color:#a78bfa;transform:scale(1.1)}
+.color-row{display:flex;gap:7px;align-items:center;margin-top:5px}
+.color-row input[type=color]{width:36px;height:32px;border:none;border-radius:7px;cursor:pointer;background:none;padding:0}
+.color-row span{font-size:11px;color:#7b7491}
+
+/* BG GRID */
+.bg-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bg-th{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:.12s;position:relative;aspect-ratio:4/3}
+.bg-th img{width:100%;height:100%;object-fit:cover}
+.bg-th:hover,.bg-th.active{border-color:#a78bfa}
+.bg-th .del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.75);color:#f87171;border:none;border-radius:4px;padding:1px 5px;font-size:10px;cursor:pointer;display:none}
+.bg-th:hover .del{display:block}
+.bg-th .nm{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);padding:3px 5px;font-size:9px;color:#c4b5fd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bg-empty{color:#2d2842;font-size:11px;text-align:center;padding:10px 0}
+.dashed-btn{width:100%;padding:8px;background:#14121f;border:1.5px dashed #2d2842;border-radius:8px;color:#5a5270;font-size:11px;cursor:pointer;font-family:inherit;transition:.15s;text-align:center;font-weight:600}
+.dashed-btn:hover{border-color:#7c3aed;color:#a78bfa}
+
+/* EDIT CONTROLS */
+.range-row{display:flex;align-items:center;gap:8px}
+.range-row input[type=range]{flex:1;-webkit-appearance:none;height:3px;border-radius:2px;background:#2d2842;outline:none;cursor:pointer}
+.range-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#7c3aed;border:2px solid #a78bfa;cursor:pointer}
+.range-val{font-size:11px;font-weight:700;color:#a78bfa;min-width:30px;text-align:right}
+.pos-row{display:flex;gap:5px}
+.pos-btn{flex:1;padding:7px 3px;background:#14121f;border:1.5px solid #1e1a2e;border-radius:7px;color:#5a5270;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s;text-align:center;min-height:34px}
+.pos-btn:hover{border-color:#3d3660;color:#9990b0}
+.pos-btn.active{border-color:#7c3aed;color:#a78bfa;background:#1a1630}
+.tog-row{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.tog-row input{display:none}
+.tog-track{width:34px;height:18px;border-radius:9px;background:#1e1a2e;border:1px solid #2d2842;position:relative;transition:.2s;flex-shrink:0}
+.tog-track::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#5a5270;transition:.2s}
+.tog-row input:checked+.tog-track{background:#7c3aed22;border-color:#7c3aed}
+.tog-row input:checked+.tog-track::after{left:18px;background:#a78bfa}
+.tog-label{font-size:11px;color:#7b7491}
+
+/* Hue swatches */
+.hue-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.h-swatch{width:100%;aspect-ratio:1;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:.12s}
+.h-swatch:hover,.h-swatch.active{border-color:#fff;transform:scale(1.1)}
+.hue-custom{display:flex;gap:7px;align-items:center;margin-top:4px}
+.hue-custom input[type=color]{width:34px;height:30px;border:none;border-radius:6px;cursor:pointer;background:none;padding:0}
+.hue-custom span{font-size:11px;color:#7b7491}
+
+/* Rotation */
+.rot-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.rot-btn{padding:7px 3px;background:#14121f;border:1.5px solid #1e1a2e;border-radius:7px;color:#5a5270;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s;text-align:center}
+.rot-btn:hover{border-color:#3d3660;color:#9990b0}
+.rot-btn.active{border-color:#7c3aed;color:#a78bfa;background:#1a1630}
+
+/* SIDEBAR DIVIDER */
+.sdiv{height:1px;background:#1a1726;margin:3px 0}
+
+/* CONTENT */
+.content{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-width:0}
+
+.drop-zone{border:2px dashed #2d2842;border-radius:18px;padding:48px 20px;text-align:center;cursor:pointer;transition:all .2s;background:linear-gradient(160deg,#14121f,#0f0e18)}
+.drop-zone:hover,.drop-zone.drag{border-color:#7c3aed;background:#1c1830}
+.dz-icon{font-size:48px;margin-bottom:12px;line-height:1}
+.dz-title{font-size:15px;font-weight:700;color:#d4cff0;margin-bottom:5px}
+.dz-sub{font-size:12px;color:#5a5270}
+.dz-sub strong{color:#a78bfa}
+
+.preview-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.preview-box{background:#14121f;border:1px solid #1e1a2e;border-radius:14px;overflow:hidden}
+.pb-label{padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#5a5270;border-bottom:1px solid #1e1a2e;display:flex;align-items:center;gap:5px}
+.dot{width:5px;height:5px;border-radius:50%}
+.dot-o{background:#7b7491}.dot-r{background:#34d399}
+.img-wrap{min-height:180px;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#1a1726 0% 25%,#14121f 0% 50%) 0 0/16px 16px}
+.img-wrap img{max-width:100%;max-height:280px;display:block}
+.empty-hint{color:#2d2842;font-size:11px}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{padding:10px 18px;border:none;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;display:inline-flex;align-items:center;gap:6px;min-height:42px}
+.btn-p{background:linear-gradient(135deg,#7c3aed,#9d5ff5);color:#fff;box-shadow:0 4px 14px #7c3aed40}
+.btn-p:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed}
+.btn-g{background:#1a1726;color:#a78bfa;border:1.5px solid #2d2842}
+.btn-g:hover{background:#1e1a2e}
+.btn-regen{background:#1a1020;color:#e879f9;border:1.5px solid #6b21a840}
+.btn-regen:hover{background:#220d2e;border-color:#a855f7}
+.btn-dl{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+.btn-dl:hover{opacity:.9;transform:translateY(-1px)}
+.btn-reel{background:linear-gradient(135deg,#0e7490,#06b6d4);color:#fff}
+.btn-reel:hover{opacity:.9;transform:translateY(-1px)}
+
+.status{padding:10px 14px;border-radius:11px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px}
+.st-info{background:#1a1630;color:#a78bfa;border:1px solid #2d2060}
+.st-error{background:#1f0f0f;color:#f87171;border:1px solid #5a1515}
+.st-ok{background:#0d1f18;color:#34d399;border:1px solid #0e3325}
+.st-ai{background:#1a1020;color:#e879f9;border:1px solid #6b21a840}
+.spinner{width:13px;height:13px;min-width:13px;border:2px solid rgba(255,255,255,.25);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+input[type=file]{display:none}
+
+/* MOBILE */
+@media(max-width:768px){
+  .burger{display:flex}
+  .sidebar{position:fixed;top:56px;left:0;bottom:0;transform:translateX(-100%);transition:transform .25s ease}
+  .sidebar.open{transform:translateX(0)}
+  .process-btn-top{display:inline-flex;margin-left:auto}
+  .logo-tag{display:none}
+  .content{padding:12px}
+  .preview-row{grid-template-columns:1fr 1fr;gap:8px}
+  .img-wrap{min-height:130px}
+  .img-wrap img{max-height:200px}
+  .actions{gap:6px}
+  .btn{padding:9px 12px;font-size:12px;min-height:38px}
 }
-.logo { display: flex; align-items: center; gap: 9px; }
-.logo-icon { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, #7c3aed, #f472b6); display: flex; align-items: center; justify-content: center; font-size: 17px; }
-.logo-name { font-size: 16px; font-weight: 800; }
-.logo-name span { background: linear-gradient(135deg, #a78bfa, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.logo-badge { font-size: 9px; font-weight: 700; background: #7c3aed22; color: #a78bfa; border: 1px solid #7c3aed44; border-radius: 4px; padding: 2px 6px; }
-
-/* ── APP LAYOUT ── */
-.app { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 58px); }
-
-/* ── SIDEBAR ── */
-.sidebar {
-  width: 240px; min-width: 240px; background: #0c0b14;
-  border-right: 1px solid #1a1726; overflow-y: auto; display: flex; flex-direction: column;
+@media(max-width:480px){
+  .preview-row{grid-template-columns:1fr}
 }
-.sidebar-section { border-bottom: 1px solid #141220; }
-.sidebar-header {
-  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-  cursor: pointer; transition: background .15s; user-select: none;
-}
-.sidebar-header:hover { background: #14121f; }
-.sidebar-section.active > .sidebar-header { background: #1a1630; }
-.sidebar-section.active > .sidebar-header .s-name { color: #c4b5fd; }
-.s-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; background: #1a1726; }
-.sidebar-section.active > .sidebar-header .s-icon { background: #2d1f5e; }
-.s-name { flex: 1; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #6b6585; }
-.s-badge { font-size: 9px; font-weight: 700; background: #bef264; color: #1a2e05; border-radius: 5px; padding: 2px 6px; }
-.s-arrow { font-size: 10px; color: #3d3660; transition: transform .2s; }
-.sidebar-section.open > .sidebar-header .s-arrow { transform: rotate(180deg); }
-
-.sidebar-body { display: none; padding: 0 12px 14px; flex-direction: column; gap: 10px; }
-.sidebar-section.open > .sidebar-body { display: flex; }
-
-/* Coming soon */
-.sidebar-section.soon > .sidebar-header { opacity: .5; cursor: default; }
-.sidebar-section.soon > .sidebar-header:hover { background: transparent; }
-
-/* AI presets */
-.ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.ai-preset { border-radius: 10px; padding: 11px 6px; text-align: center; cursor: pointer; border: 1.5px solid #1e1a2e; transition: all .15s; background: #14121f; }
-.ai-preset:hover { border-color: #7c3aed; background: #1a1630; }
-.ai-preset.active { border-color: #a78bfa; background: #1c1838; }
-.ai-preset .pi { font-size: 20px; display: block; margin-bottom: 4px; }
-.ai-preset .pt { font-size: 10px; font-weight: 700; color: #9990b0; line-height: 1.3; }
-.ai-preset.active .pt { color: #c4b5fd; }
-
-.sec-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #5a5270; margin-bottom: 4px; }
-.prompt-input { width: 100%; padding: 9px 11px; background: #14121f; border: 1.5px solid #1e1a2e; border-radius: 9px; color: #d4cff0; font-size: 12px; font-family: inherit; resize: none; transition: .15s; outline: none; }
-.prompt-input:focus { border-color: #7c3aed; }
-.translate-badge { font-size: 10px; color: #3d3660; margin-top: 3px; }
-.translate-badge.done { color: #34d399; }
-.translate-badge.loading { color: #a78bfa; }
-
-/* Colors */
-.color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-.color-swatch { width: 100%; aspect-ratio: 1; border-radius: 7px; cursor: pointer; border: 2px solid transparent; transition: .12s; }
-.color-swatch:hover, .color-swatch.active { border-color: #a78bfa; transform: scale(1.12); }
-.color-custom { display: flex; gap: 7px; align-items: center; margin-top: 4px; }
-.color-custom input[type=color] { width: 38px; height: 34px; border: none; border-radius: 7px; cursor: pointer; background: none; padding: 0; }
-.color-custom span { font-size: 12px; color: #7b7491; }
-
-/* My bgs */
-.bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.bg-thumb { border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: .12s; position: relative; aspect-ratio: 4/3; }
-.bg-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.bg-thumb:hover, .bg-thumb.active { border-color: #a78bfa; }
-.bg-thumb .del { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,.75); color: #f87171; border: none; border-radius: 4px; padding: 1px 5px; font-size: 10px; cursor: pointer; display: none; }
-.bg-thumb:hover .del { display: block; }
-.bg-thumb .bname { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.65); padding: 3px 5px; font-size: 9px; color: #c4b5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bg-empty { color: #2d2842; font-size: 11px; text-align: center; padding: 10px 0; }
-.upload-bg-btn { width: 100%; padding: 8px; background: #14121f; border: 1.5px dashed #2d2842; border-radius: 8px; color: #5a5270; font-size: 11px; cursor: pointer; font-family: inherit; transition: .15s; text-align: center; font-weight: 600; }
-.upload-bg-btn:hover { border-color: #7c3aed; color: #a78bfa; }
-
-/* Edit controls */
-.scale-row { display: flex; align-items: center; gap: 8px; }
-.scale-lbl { font-size: 10px; color: #5a5270; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-.scale-val { font-size: 11px; font-weight: 700; color: #a78bfa; min-width: 30px; text-align: right; }
-input[type=range] { flex: 1; -webkit-appearance: none; height: 3px; border-radius: 2px; background: #2d2842; outline: none; cursor: pointer; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #7c3aed; border: 2px solid #a78bfa; cursor: pointer; }
-.pos-row { display: flex; gap: 5px; }
-.pos-btn { flex: 1; padding: 6px 3px; background: #14121f; border: 1.5px solid #1e1a2e; border-radius: 7px; color: #5a5270; font-size: 10px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; text-align: center; }
-.pos-btn:hover { border-color: #3d3660; color: #9990b0; }
-.pos-btn.active { border-color: #7c3aed; color: #a78bfa; background: #1a1630; }
-.shadow-toggle { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #7b7491; cursor: pointer; user-select: none; }
-.shadow-toggle input { display: none; }
-.tog { width: 34px; height: 18px; border-radius: 9px; background: #1e1a2e; border: 1px solid #2d2842; position: relative; transition: .2s; flex-shrink: 0; }
-.tog::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #5a5270; transition: .2s; }
-.shadow-toggle input:checked + .tog { background: #7c3aed22; border-color: #7c3aed; }
-.shadow-toggle input:checked + .tog::after { left: 18px; background: #a78bfa; }
-
-.sidebar-divider { height: 1px; background: #1a1726; margin: 4px 0; }
-
-/* ── MAIN CONTENT ── */
-.content { flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-
-.drop-zone { border: 2px dashed #2d2842; border-radius: 20px; padding: 52px 24px; text-align: center; cursor: pointer; transition: all .2s; background: linear-gradient(160deg, #14121f, #0f0e18); }
-.drop-zone:hover, .drop-zone.drag { border-color: #7c3aed; background: #1c1830; }
-.dz-icon { font-size: 52px; margin-bottom: 14px; line-height: 1; }
-.dz-title { font-size: 16px; font-weight: 700; color: #d4cff0; margin-bottom: 6px; }
-.dz-sub { font-size: 13px; color: #5a5270; }
-.dz-sub strong { color: #a78bfa; }
-
-.preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.preview-box { background: #14121f; border: 1px solid #1e1a2e; border-radius: 16px; overflow: hidden; }
-.pb-label { padding: 9px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #5a5270; border-bottom: 1px solid #1e1a2e; display: flex; align-items: center; gap: 6px; }
-.pb-dot { width: 6px; height: 6px; border-radius: 50%; }
-.pb-dot.orig { background: #7b7491; }
-.pb-dot.result { background: #34d399; }
-.img-wrap { min-height: 200px; display: flex; align-items: center; justify-content: center; background: repeating-conic-gradient(#1a1726 0% 25%, #14121f 0% 50%) 0 0/18px 18px; }
-.img-wrap img { max-width: 100%; max-height: 320px; display: block; }
-.empty-hint { color: #2d2842; font-size: 12px; }
-
-.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.btn { padding: 11px 20px; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .15s; display: inline-flex; align-items: center; gap: 7px; }
-.btn-primary { background: linear-gradient(135deg, #7c3aed, #9d5ff5); color: white; box-shadow: 0 4px 15px #7c3aed40; }
-.btn-primary:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
-.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-.btn-ghost { background: #1a1726; color: #a78bfa; border: 1.5px solid #2d2842; }
-.btn-ghost:hover { background: #1e1a2e; }
-.btn-regen { background: #1a1020; color: #e879f9; border: 1.5px solid #6b21a840; }
-.btn-regen:hover { background: #220d2e; border-color: #a855f7; }
-.btn-dl { background: linear-gradient(135deg, #059669, #10b981); color: white; }
-.btn-dl:hover { opacity: .9; transform: translateY(-1px); }
-
-.status { padding: 11px 15px; border-radius: 12px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-.status.info  { background: #1a1630; color: #a78bfa; border: 1px solid #2d2060; }
-.status.error { background: #1f0f0f; color: #f87171; border: 1px solid #5a1515; }
-.status.success { background: #0d1f18; color: #34d399; border: 1px solid #0e3325; }
-.status.ai { background: #1a1020; color: #e879f9; border: 1px solid #6b21a840; }
-.spinner { width: 14px; height: 14px; min-width: 14px; border: 2px solid rgba(255,255,255,.25); border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-input[type=file] { display: none; }
 </style>
 </head>
 <body>
 
 <header>
+  <div class="burger" id="burger" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </div>
   <div class="logo">
     <div class="logo-icon">🛍️</div>
     <div class="logo-name"><span>Приложуха</span></div>
-    <span class="logo-badge">AI</span>
+    <span class="logo-tag">AI Маркетплейс</span>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-p process-btn-top" onclick="runProcess(false)" style="padding:8px 14px;font-size:12px">✨ Обработать</button>
   </div>
 </header>
 
+<div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
+
 <div class="app">
 
-  <!-- ── SIDEBAR ── -->
-  <nav class="sidebar">
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar" id="sidebar">
 
-    <!-- 1. Удаление фона -->
-    <div class="sidebar-section active open" id="sec-remove">
-      <div class="sidebar-header" onclick="activateSection('remove')">
-        <div class="s-icon">🗑️</div>
-        <span class="s-name">Удаление фона</span>
-        <span class="s-arrow">▾</span>
-      </div>
-      <div class="sidebar-body">
-        <div style="font-size:11px;color:#5a5270;line-height:1.5">Загрузи фото — фон будет удалён автоматически. Товар останется на прозрачном фоне.</div>
-      </div>
+  <!-- 1. Удаление фона -->
+  <div class="sec active open" id="sec-remove">
+    <div class="sec-hdr" onclick="activate('remove')">
+      <div class="s-ic">🗑️</div><span class="s-name">Удаление фона</span><span class="s-arrow">▾</span>
     </div>
+    <div class="sec-body">
+      <div style="font-size:11px;color:#5a5270;line-height:1.5">Фон удаляется автоматически. Результат — товар на прозрачном фоне (PNG).</div>
+    </div>
+  </div>
 
-    <!-- 2. AI фон -->
-    <div class="sidebar-section" id="sec-ai">
-      <div class="sidebar-header" onclick="activateSection('ai')">
-        <div class="s-icon">🌄</div>
-        <span class="s-name">AI Фон для товара</span>
-        <span class="s-arrow">▾</span>
-      </div>
-      <div class="sidebar-body">
+  <!-- 2. AI Фон -->
+  <div class="sec" id="sec-ai">
+    <div class="sec-hdr" onclick="activate('ai')">
+      <div class="s-ic">🌄</div><span class="s-name">AI Фон для товара</span><span class="s-arrow">▾</span>
+    </div>
+    <div class="sec-body">
+      <div>
+        <div class="lbl">Пресеты фонов</div>
         <div class="ai-grid" id="aiGrid"></div>
-        <div>
-          <div class="sec-label">Свой промпт (по-русски)</div>
-          <textarea class="prompt-input" id="customPrompt" rows="2" placeholder="Опиши фон своими словами..."></textarea>
-          <div class="translate-badge" id="translateBadge">· автоперевод на английский</div>
+      </div>
+      <div>
+        <div class="lbl">Свой промпт (по-русски)</div>
+        <textarea class="tinput" id="customPrompt" rows="2" placeholder="Опиши фон..."></textarea>
+        <div class="tr-badge" id="trBadge">· автоперевод</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Цвет фона -->
+  <div class="sec" id="sec-color">
+    <div class="sec-hdr" onclick="activate('color')">
+      <div class="s-ic">🎨</div><span class="s-name">Цвет фона</span><span class="s-arrow">▾</span>
+    </div>
+    <div class="sec-body">
+      <div class="color-grid" id="colorGrid"></div>
+      <div class="color-row">
+        <input type="color" id="bgColor" value="#ffffff" onchange="selectBgColor(this.value)">
+        <span>Свой цвет</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Мои фоны -->
+  <div class="sec" id="sec-custom">
+    <div class="sec-hdr" onclick="activate('custom')">
+      <div class="s-ic">📁</div><span class="s-name">Мои фоны</span><span class="s-arrow">▾</span>
+    </div>
+    <div class="sec-body">
+      <div class="bg-grid" id="bgGrid"></div>
+      <div class="bg-empty" id="bgEmpty">Загрузи первый фон ↓</div>
+      <button class="dashed-btn" onclick="document.getElementById('bgUpload').click()">+ Загрузить фон</button>
+    </div>
+  </div>
+
+  <!-- 5. Генерация изображения -->
+  <div class="sec" id="sec-genimg">
+    <div class="sec-hdr" onclick="activate('genimg')">
+      <div class="s-ic">🖼️</div><span class="s-name">Генерация изображения</span><span class="s-arrow">▾</span>
+    </div>
+    <div class="sec-body">
+      <div style="font-size:10px;color:#5a5270">Генерация картинки без товара — для баннеров, фонов, маркетинга</div>
+      <div>
+        <div class="lbl">Промпт (по-русски)</div>
+        <textarea class="tinput" id="genImgPrompt" rows="2" placeholder="Что нарисовать..."></textarea>
+        <div class="tr-badge" id="genImgBadge">· автоперевод</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. AI Примерка -->
+  <div class="sec" id="sec-primerka">
+    <div class="sec-hdr" onclick="activate('primerka')">
+      <div class="s-ic">👕</div><span class="s-name">AI Примерка</span><span class="s-arrow">▾</span>
+    </div>
+    <div class="sec-body">
+      <div style="font-size:10px;color:#5a5270">Товар в реальном контексте — на руках, в интерьере, на витрине</div>
+      <div class="lbl" style="margin-top:4px">Сцена</div>
+      <div class="ai-grid" id="primerkaGrid"></div>
+    </div>
+  </div>
+
+  <div class="sdiv"></div>
+
+  <!-- 7. Редактирование -->
+  <div class="sec open" id="sec-edit">
+    <div class="sec-hdr" onclick="toggleSec('sec-edit')">
+      <div class="s-ic">✏️</div><span class="s-name">Редактирование</span><span class="s-arrow">▾</span>
+    </div>
+    <div class="sec-body">
+
+      <div>
+        <div class="lbl">Размер товара</div>
+        <div class="range-row">
+          <input type="range" id="scaleSlider" min="30" max="110" value="82"
+            oninput="document.getElementById('scaleVal').textContent=this.value+'%';scheduleAuto()">
+          <span class="range-val" id="scaleVal">82%</span>
         </div>
       </div>
-    </div>
 
-    <!-- 3. Замена цвета фона -->
-    <div class="sidebar-section" id="sec-color">
-      <div class="sidebar-header" onclick="activateSection('color')">
-        <div class="s-icon">🎨</div>
-        <span class="s-name">Замена цвета фона</span>
-        <span class="s-arrow">▾</span>
-      </div>
-      <div class="sidebar-body">
-        <div class="color-grid" id="colorGrid"></div>
-        <div class="color-custom">
-          <input type="color" id="customColor" value="#ffffff" onchange="selectColor(this.value)">
-          <span>Свой цвет</span>
+      <div>
+        <div class="lbl">Позиция</div>
+        <div class="pos-row">
+          <button class="pos-btn" onclick="selPos('top',this)">Сверху</button>
+          <button class="pos-btn active" onclick="selPos('center',this)">Центр</button>
+          <button class="pos-btn" onclick="selPos('bottom',this)">Снизу</button>
         </div>
       </div>
-    </div>
 
-    <!-- 4. Мои фоны -->
-    <div class="sidebar-section" id="sec-custom">
-      <div class="sidebar-header" onclick="activateSection('custom')">
-        <div class="s-icon">📁</div>
-        <span class="s-name">Мои фоны</span>
-        <span class="s-arrow">▾</span>
-      </div>
-      <div class="sidebar-body">
-        <div class="bg-grid" id="bgGrid"></div>
-        <div class="bg-empty" id="bgEmpty">Загрузи первый фон ↓</div>
-        <button class="upload-bg-btn" onclick="document.getElementById('bgUploadInput').click()">+ Загрузить фон</button>
-      </div>
-    </div>
-
-    <!-- 5. Редактирование (размер, позиция) -->
-    <div class="sidebar-section" id="sec-edit">
-      <div class="sidebar-header" onclick="toggleOpen('sec-edit')">
-        <div class="s-icon">✏️</div>
-        <span class="s-name">Редактирование</span>
-        <span class="s-arrow">▾</span>
-      </div>
-      <div class="sidebar-body">
-        <div>
-          <div class="sec-label" style="margin-bottom:6px">Размер товара</div>
-          <div class="scale-row">
-            <input type="range" id="scaleSlider" min="30" max="110" value="82" oninput="document.getElementById('scaleVal').textContent=this.value+'%'">
-            <span class="scale-val" id="scaleVal">82%</span>
-          </div>
+      <div>
+        <div class="lbl">Поворот</div>
+        <div class="rot-presets">
+          <button class="rot-btn active" onclick="selRot(0,this)">↑ Прямо</button>
+          <button class="rot-btn" onclick="selRot(-15,this)">↖ -15°</button>
+          <button class="rot-btn" onclick="selRot(15,this)">↗ +15°</button>
+          <button class="rot-btn" onclick="selRot(-30,this)">↙ -30°</button>
         </div>
-        <div>
-          <div class="sec-label" style="margin-bottom:6px">Позиция</div>
-          <div class="pos-row">
-            <button class="pos-btn" onclick="selectPos('top',this)">Сверху</button>
-            <button class="pos-btn active" onclick="selectPos('center',this)">Центр</button>
-            <button class="pos-btn" onclick="selectPos('bottom',this)">Снизу</button>
-          </div>
-        </div>
-        <label class="shadow-toggle">
-          <input type="checkbox" id="shadowToggle">
-          <div class="tog"></div>
-          <span>Тень под товаром</span>
-        </label>
-      </div>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <!-- Coming soon sections -->
-    <div class="sidebar-section soon">
-      <div class="sidebar-header">
-        <div class="s-icon">🖼️</div>
-        <span class="s-name">Генерация изображения</span>
-        <span class="s-arrow">▾</span>
-      </div>
-    </div>
-    <div class="sidebar-section soon">
-      <div class="sidebar-header">
-        <div class="s-icon">👕</div>
-        <span class="s-name">AI Примерка</span>
-        <span class="s-arrow">▾</span>
-      </div>
-    </div>
-    <div class="sidebar-section soon">
-      <div class="sidebar-header">
-        <div class="s-icon">🔄</div>
-        <span class="s-name">Изменение ракурса</span>
-        <span class="s-arrow">▾</span>
-      </div>
-    </div>
-    <div class="sidebar-section soon">
-      <div class="sidebar-header">
-        <div class="s-icon">💧</div>
-        <span class="s-name">Изменение цвета</span>
-        <span class="s-arrow">▾</span>
-      </div>
-    </div>
-    <div class="sidebar-section soon">
-      <div class="sidebar-header">
-        <div class="s-icon">▶️</div>
-        <span class="s-name">Генерация рилс</span>
-        <span class="s-badge">БЕТА</span>
-        <span class="s-arrow">▾</span>
-      </div>
-    </div>
-
-  </nav>
-
-  <!-- ── CONTENT ── -->
-  <main class="content">
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <div class="dz-icon">📦</div>
-      <div class="dz-title">Перетащи фото товара</div>
-      <div class="dz-sub">или <strong>нажми для выбора</strong> · JPG PNG WEBP до 20 МБ</div>
-    </div>
-
-    <input type="file" id="fileInput" accept="image/*">
-    <input type="file" id="bgUploadInput" accept="image/*">
-
-    <div class="preview-row" id="previewRow" style="display:none">
-      <div class="preview-box">
-        <div class="pb-label"><span class="pb-dot orig"></span>Оригинал</div>
-        <div class="img-wrap">
-          <img id="origImg" style="display:none">
-          <span class="empty-hint" id="origEmpty">нет фото</span>
+        <div class="range-row" style="margin-top:6px">
+          <input type="range" id="rotSlider" min="-90" max="90" value="0"
+            oninput="document.getElementById('rotVal').textContent=this.value+'°';currentRotation=parseFloat(this.value);scheduleAuto()">
+          <span class="range-val" id="rotVal">0°</span>
         </div>
       </div>
-      <div class="preview-box">
-        <div class="pb-label"><span class="pb-dot result"></span>Результат</div>
-        <div class="img-wrap">
-          <img id="resultImg" style="display:none">
-          <span class="empty-hint" id="resultEmpty">нажми «Обработать»</span>
+
+      <label class="tog-row">
+        <input type="checkbox" id="shadowToggle" onchange="scheduleAuto()">
+        <div class="tog-track"></div>
+        <span class="tog-label">Тень под товаром</span>
+      </label>
+
+      <div>
+        <div class="lbl">Цвет товара</div>
+        <div class="hue-grid" id="hueGrid"></div>
+        <div class="hue-custom">
+          <input type="color" id="hueColor" value="#000000" onchange="selHue(this.value,null)">
+          <span style="font-size:11px;color:#7b7491">Свой цвет</span>
         </div>
+        <div style="font-size:10px;color:#3d3660;margin-top:3px">🚫 чёрный = без изменений</div>
       </div>
+
     </div>
+  </div>
 
-    <div id="statusBox"></div>
+  <div class="sdiv"></div>
 
-    <div class="actions" id="actionsRow" style="display:none">
-      <button class="btn btn-primary" id="processBtn" onclick="runProcess(false)">✨ Обработать</button>
-      <button class="btn btn-regen" id="regenBtn" style="display:none" onclick="runProcess(true)">🔄 Перегенерировать</button>
-      <button class="btn btn-ghost" onclick="resetPhoto()">📁 Другое фото</button>
-      <button class="btn btn-dl" id="downloadBtn" style="display:none" onclick="download()">⬇️ Скачать</button>
+  <!-- Генерация рилс -->
+  <div class="sec" id="sec-reel">
+    <div class="sec-hdr" onclick="toggleSec('sec-reel')">
+      <div class="s-ic">🎬</div><span class="s-name">Генерация рилс</span>
+      <span class="s-badge-beta">БЕТА</span><span class="s-arrow">▾</span>
     </div>
-  </main>
+    <div class="sec-body">
+      <div style="font-size:10px;color:#5a5270">Создаёт 3-секундный MP4 с анимацией зума из текущего результата (9:16)</div>
+      <button class="btn btn-reel" onclick="createReel()" style="width:100%;justify-content:center">🎬 Создать рилс</button>
+    </div>
+  </div>
 
+</nav>
+
+<!-- ══ CONTENT ══ -->
+<main class="content">
+
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="dz-icon">📦</div>
+    <div class="dz-title">Перетащи фото товара</div>
+    <div class="dz-sub">или <strong>нажми для выбора</strong> · JPG PNG WEBP до 20 МБ</div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*">
+  <input type="file" id="bgUpload" accept="image/*">
+
+  <div class="preview-row" id="previewRow" style="display:none">
+    <div class="preview-box">
+      <div class="pb-label"><span class="dot dot-o"></span>Оригинал</div>
+      <div class="img-wrap"><img id="origImg" style="display:none"><span class="empty-hint" id="origEmpty">нет фото</span></div>
+    </div>
+    <div class="preview-box">
+      <div class="pb-label"><span class="dot dot-r"></span>Результат</div>
+      <div class="img-wrap"><img id="resultImg" style="display:none"><span class="empty-hint" id="resultEmpty">нажми «Обработать»</span></div>
+    </div>
+  </div>
+
+  <div id="statusBox"></div>
+
+  <div class="actions" id="actionsRow" style="display:none">
+    <button class="btn btn-p" id="processBtn" onclick="runProcess(false)">✨ Обработать</button>
+    <button class="btn btn-regen" id="regenBtn" style="display:none" onclick="runProcess(true)">🔄 Ещё раз</button>
+    <button class="btn btn-g" onclick="resetPhoto()">📁 Другое фото</button>
+    <button class="btn btn-dl" id="dlBtn" style="display:none" onclick="doDownload()">⬇️ Скачать</button>
+  </div>
+
+</main>
 </div>
 
 <script>
-const API = '';
-let selectedFile = null;
-let fgBlob = null;
-let selectedColor = '#ffffff';
-let selectedBgName = null;
-let selectedBgFile = null;
-let selectedAiPrompt = null;
-let translatedPrompt = null;
-let currentMode = 'remove';  // remove | ai | color | custom
-let currentPosition = 'center';
-let resultBlob = null;
-let translateTimer = null;
+// ── STATE ─────────────────────────────────────────────────────────────
+let selectedFile=null, fgBlob=null, resultBlob=null;
+let currentMode='remove', currentPos='center', currentRotation=0;
+let selectedBgColor='#ffffff', selectedBgName=null, selectedBgFile=null;
+let selectedAiPrompt=null, translatedPrompt=null;
+let selectedPrimerkaPrompt=null;
+let selectedHue=null;
+let translateTimer=null, autoTimer=null;
 
-// ── SIDEBAR LOGIC ─────────────────────────────────────────────────────────
-const TOOL_SECTIONS = ['remove', 'ai', 'color', 'custom'];
+// ── MOBILE SIDEBAR ────────────────────────────────────────────────────
+function toggleSidebar(){
+  const s=document.getElementById('sidebar');
+  const b=document.getElementById('backdrop');
+  s.classList.toggle('open');
+  b.classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('show');
+}
 
-function activateSection(name) {
-  currentMode = name;
-  // Mark active + toggle open
-  TOOL_SECTIONS.forEach(s => {
-    const el = document.getElementById('sec-' + s);
-    if (!el) return;
-    if (s === name) {
-      const wasOpen = el.classList.contains('open');
+// ── SECTION LOGIC ─────────────────────────────────────────────────────
+const TOOL_SECS=['remove','ai','color','custom','genimg','primerka'];
+function activate(name){
+  currentMode=name;
+  TOOL_SECS.forEach(s=>{
+    const el=document.getElementById('sec-'+s);
+    if(!el)return;
+    if(s===name){
+      const wasOpen=el.classList.contains('open');
       el.classList.add('active');
-      el.classList.toggle('open', !wasOpen);
+      el.classList.toggle('open',!wasOpen);
     } else {
-      el.classList.remove('active', 'open');
+      el.classList.remove('active','open');
     }
   });
+  if(window.innerWidth<=768) closeSidebar();
+}
+function toggleSec(id){
+  document.getElementById(id)?.classList.toggle('open');
 }
 
-function toggleOpen(id) {
-  const el = document.getElementById(id);
-  if (el) el.classList.toggle('open');
-}
-
-// ── AI PRESETS ────────────────────────────────────────────────────────────
-const AI_PRESETS = [
-  { icon: '🏛️', label: 'Белый студийный', prompt: 'clean white studio background soft light product photography professional' },
-  { icon: '🌿', label: 'Лайфстайл',        prompt: 'lifestyle background flowers green plants natural light soft bokeh product photography' },
-  { icon: '🎯', label: 'На подиуме',        prompt: 'minimalist gray concrete podium platform product display studio' },
-  { icon: '🛋️', label: 'Интерьер',          prompt: 'modern scandinavian interior blurred background soft light product' },
-  { icon: '🌅', label: 'Пастельный',        prompt: 'soft pastel gradient peach beige pink background product photography' },
-  { icon: '🖤', label: 'Тёмный люкс',       prompt: 'dark luxury background deep navy black marble texture product' },
+// ── AI PRESETS ────────────────────────────────────────────────────────
+const AI_PRESETS=[
+  {ic:'🏛️',nm:'Белый студийный',p:'clean white studio background soft light product photography professional'},
+  {ic:'🌿',nm:'Лайфстайл',p:'lifestyle background flowers green plants natural light soft bokeh product photography'},
+  {ic:'🎯',nm:'На подиуме',p:'minimalist gray concrete podium platform product display studio light shadows'},
+  {ic:'🛋️',nm:'Интерьер',p:'modern scandinavian interior blurred background soft natural light product'},
+  {ic:'🌅',nm:'Пастельный',p:'soft pastel gradient peach beige pink background product photography'},
+  {ic:'🖤',nm:'Тёмный люкс',p:'dark luxury background deep navy black marble texture product photography'},
 ];
-
-AI_PRESETS.forEach(p => {
-  const el = document.createElement('div');
-  el.className = 'ai-preset';
-  el.innerHTML = `<span class="pi">${p.icon}</span><div class="pt">${p.label}</div>`;
-  el.onclick = () => {
-    selectedAiPrompt = p.prompt; translatedPrompt = p.prompt;
-    document.getElementById('customPrompt').value = p.label;
-    document.querySelectorAll('.ai-preset').forEach(e => e.classList.remove('active'));
-    el.classList.add('active');
-    setBadge('Готово ✓', 'done');
+AI_PRESETS.forEach(pr=>{
+  const el=document.createElement('div');el.className='ai-card';
+  el.innerHTML=`<span class="ic">${pr.ic}</span><div class="nm">${pr.nm}</div>`;
+  el.onclick=()=>{
+    selectedAiPrompt=translatedPrompt=pr.p;
+    document.getElementById('customPrompt').value=pr.nm;
+    document.querySelectorAll('#aiGrid .ai-card').forEach(e=>e.classList.remove('active'));
+    el.classList.add('active');setBadge('trBadge','Выбран ✓','ok');
   };
   document.getElementById('aiGrid').appendChild(el);
 });
 
-const promptEl = document.getElementById('customPrompt');
-promptEl.addEventListener('input', function () {
-  const val = this.value.trim();
-  translatedPrompt = null; selectedAiPrompt = null;
-  document.querySelectorAll('.ai-preset').forEach(e => e.classList.remove('active'));
-  clearTimeout(translateTimer);
-  if (!val) { setBadge('· автоперевод на английский', ''); return; }
-  setBadge('Перевожу...', 'loading');
-  translateTimer = setTimeout(() => doTranslate(val), 900);
+const PRIMERKA_PRESETS=[
+  {ic:'🤲',nm:'На руках',p:'product being held by elegant hands white clean studio background'},
+  {ic:'📦',nm:'На столе',p:'product on wooden table lifestyle photography natural light'},
+  {ic:'🏪',nm:'Витрина',p:'product in luxury store showcase display premium retail lighting'},
+  {ic:'📱',nm:'Маркетплейс',p:'product on white podium marketplace product card photography'},
+];
+PRIMERKA_PRESETS.forEach(pr=>{
+  const el=document.createElement('div');el.className='ai-card';
+  el.innerHTML=`<span class="ic">${pr.ic}</span><div class="nm">${pr.nm}</div>`;
+  el.onclick=()=>{
+    selectedPrimerkaPrompt=pr.p;
+    document.querySelectorAll('#primerkaGrid .ai-card').forEach(e=>e.classList.remove('active'));
+    el.classList.add('active');
+  };
+  document.getElementById('primerkaGrid').appendChild(el);
 });
 
-async function doTranslate(text) {
-  try {
-    const fd = new FormData(); fd.append('text', text);
-    const r = await fetch('/api/translate', { method: 'POST', body: fd });
-    const d = await r.json();
-    translatedPrompt = d.result; selectedAiPrompt = d.result;
-    setBadge('→ ' + d.result.slice(0, 55) + (d.result.length > 55 ? '...' : ''), 'done');
-  } catch {
-    translatedPrompt = text; selectedAiPrompt = text;
-    setBadge('Перевод недоступен', '');
+// Prompt translation
+const promptEl=document.getElementById('customPrompt');
+promptEl.addEventListener('input',function(){
+  const v=this.value.trim();
+  selectedAiPrompt=translatedPrompt=null;
+  document.querySelectorAll('#aiGrid .ai-card').forEach(e=>e.classList.remove('active'));
+  clearTimeout(translateTimer);
+  if(!v){setBadge('trBadge','· автоперевод','');return;}
+  setBadge('trBadge','Перевожу...','loading');
+  translateTimer=setTimeout(()=>doTranslate(v,'trBadge','ai'),900);
+});
+
+const genImgEl=document.getElementById('genImgPrompt');
+let genImgTranslated=null,genImgTimer=null;
+genImgEl.addEventListener('input',function(){
+  const v=this.value.trim();genImgTranslated=null;
+  clearTimeout(genImgTimer);
+  if(!v){setBadge('genImgBadge','· автоперевод','');return;}
+  setBadge('genImgBadge','Перевожу...','loading');
+  genImgTimer=setTimeout(()=>doTranslate(v,'genImgBadge','genimg'),900);
+});
+
+async function doTranslate(text,badgeId,forMode){
+  try{
+    const fd=new FormData();fd.append('text',text);
+    const r=await fetch('/api/translate',{method:'POST',body:fd});
+    const d=await r.json();
+    const t=d.result;
+    if(forMode==='ai'){selectedAiPrompt=translatedPrompt=t;}
+    else{genImgTranslated=t;}
+    setBadge(badgeId,'→ '+t.slice(0,50)+(t.length>50?'...':''),'ok');
+  }catch{
+    if(forMode==='ai')selectedAiPrompt=translatedPrompt=text;
+    else genImgTranslated=text;
+    setBadge(badgeId,'Перевод недоступен','');
   }
 }
-function setBadge(t, cls) {
-  const b = document.getElementById('translateBadge');
-  b.textContent = t; b.className = 'translate-badge' + (cls ? ' ' + cls : '');
+function setBadge(id,text,cls){
+  const b=document.getElementById(id);
+  b.textContent=text;b.className='tr-badge'+(cls?' '+cls:'');
 }
 
-// ── COLORS ────────────────────────────────────────────────────────────────
-const COLORS = ['#ffffff','#f5f5f5','#e8e6f0','#fef9ec','#ecfdf5',
-                 '#eff6ff','#fce7f3','#fff7ed','#1f2937','#0f172a',
-                 '#1e1b4b','#14121f','#f0fdf4','#fdf4ff','#fffbeb'];
-const cg = document.getElementById('colorGrid');
-COLORS.forEach(c => {
-  const s = document.createElement('div');
-  s.className = 'color-swatch'; s.style.background = c;
-  if (c === '#ffffff') s.style.outline = '1px solid #2d2842';
-  s.title = c; s.onclick = () => selectColor(c, s);
-  cg.appendChild(s);
+// ── COLORS ────────────────────────────────────────────────────────────
+const BGCOLORS=['#ffffff','#f5f5f5','#e8e6f0','#fef9ec','#ecfdf5',
+                '#eff6ff','#fce7f3','#fff7ed','#1f2937','#0f172a',
+                '#1e1b4b','#14121f','#f0fdf4','#fdf4ff','#fffbeb'];
+const cg=document.getElementById('colorGrid');
+BGCOLORS.forEach(c=>{
+  const s=document.createElement('div');s.className='swatch';
+  s.style.background=c;if(c==='#ffffff')s.style.outline='1px solid #2d2842';
+  s.title=c;s.onclick=()=>selectBgColor(c,s);cg.appendChild(s);
 });
-function selectColor(c, el) {
-  selectedColor = c;
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-  if (el) el.classList.add('active');
-  document.getElementById('customColor').value = c;
+function selectBgColor(c,el){
+  selectedBgColor=c;
+  document.querySelectorAll('#colorGrid .swatch').forEach(s=>s.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('bgColor').value=c;
+  scheduleAuto();
 }
-document.getElementById('customColor').onchange = e => selectColor(e.target.value, null);
-selectColor('#ffffff', cg.firstChild);
+document.getElementById('bgColor').onchange=e=>selectBgColor(e.target.value,null);
+selectBgColor('#ffffff',cg.firstChild);
 
-// ── POSITION ──────────────────────────────────────────────────────────────
-function selectPos(pos, el) {
-  currentPosition = pos;
-  document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
+// Hue swatches
+const HUE_COLORS=['#000000','#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f9fafb','#1e293b','#7c3aed'];
+const hg=document.getElementById('hueGrid');
+HUE_COLORS.forEach(c=>{
+  const s=document.createElement('div');s.className='h-swatch';
+  s.style.background=c;if(c==='#f9fafb')s.style.outline='1px solid #2d2842';
+  s.title=c==='#000000'?'Без изменений':c;
+  s.onclick=()=>selHue(c,s);hg.appendChild(s);
+});
+function selHue(c,el){
+  selectedHue=c==='#000000'?null:c;
+  document.querySelectorAll('#hueGrid .h-swatch').forEach(s=>s.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('hueColor').value=c;
+  scheduleAuto();
+}
+selHue('#000000',hg.firstChild);
+
+// ── POS / ROT ─────────────────────────────────────────────────────────
+function selPos(p,el){
+  currentPos=p;
+  document.querySelectorAll('.pos-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');scheduleAuto();
+}
+function selRot(deg,el){
+  currentRotation=deg;
+  document.getElementById('rotSlider').value=deg;
+  document.getElementById('rotVal').textContent=deg+'°';
+  document.querySelectorAll('.rot-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');scheduleAuto();
 }
 
-// ── FILE ──────────────────────────────────────────────────────────────────
-document.getElementById('fileInput').onchange = e => loadFile(e.target.files[0]);
-document.getElementById('bgUploadInput').onchange = e => uploadBg(e.target.files[0]);
-const dz = document.getElementById('dropZone');
-dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
-dz.ondragleave = () => dz.classList.remove('drag');
-dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag'); loadFile(e.dataTransfer.files[0]); };
-
-function loadFile(file) {
-  if (!file) return;
-  selectedFile = file; fgBlob = null;
-  document.getElementById('origImg').src = URL.createObjectURL(file);
-  document.getElementById('origImg').style.display = 'block';
-  document.getElementById('origEmpty').style.display = 'none';
-  document.getElementById('previewRow').style.display = 'grid';
-  document.getElementById('actionsRow').style.display = 'flex';
-  document.getElementById('dropZone').style.display = 'none';
-  document.getElementById('resultImg').style.display = 'none';
-  document.getElementById('resultEmpty').style.display = 'block';
-  document.getElementById('downloadBtn').style.display = 'none';
-  document.getElementById('regenBtn').style.display = 'none';
-  resultBlob = null; setStatus('');
+// Auto-recomposite (non-AI modes)
+function scheduleAuto(){
+  if(!fgBlob||!resultBlob)return;
+  if(currentMode==='ai'||currentMode==='primerka'){
+    // just show hint, don't auto-regenerate AI
+    document.getElementById('regenBtn').style.display='inline-flex';
+    return;
+  }
+  clearTimeout(autoTimer);
+  autoTimer=setTimeout(()=>runProcess(true),450);
 }
 
-function resetPhoto() {
-  selectedFile = null; fgBlob = null;
-  document.getElementById('dropZone').style.display = '';
-  document.getElementById('previewRow').style.display = 'none';
-  document.getElementById('actionsRow').style.display = 'none';
+// ── FILE ─────────────────────────────────────────────────────────────
+document.getElementById('fileInput').onchange=e=>loadFile(e.target.files[0]);
+document.getElementById('bgUpload').onchange=e=>uploadBg(e.target.files[0]);
+const dz=document.getElementById('dropZone');
+dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};
+dz.ondragleave=()=>dz.classList.remove('drag');
+dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');loadFile(e.dataTransfer.files[0])};
+
+function loadFile(f){
+  if(!f)return;
+  selectedFile=f;fgBlob=null;resultBlob=null;
+  document.getElementById('origImg').src=URL.createObjectURL(f);
+  document.getElementById('origImg').style.display='block';
+  document.getElementById('origEmpty').style.display='none';
+  document.getElementById('previewRow').style.display='grid';
+  document.getElementById('actionsRow').style.display='flex';
+  document.getElementById('dropZone').style.display='none';
+  document.getElementById('resultImg').style.display='none';
+  document.getElementById('resultEmpty').style.display='block';
+  document.getElementById('dlBtn').style.display='none';
+  document.getElementById('regenBtn').style.display='none';
   setStatus('');
-  document.getElementById('fileInput').value = '';
+}
+function resetPhoto(){
+  selectedFile=fgBlob=resultBlob=null;
+  document.getElementById('dropZone').style.display='';
+  document.getElementById('previewRow').style.display='none';
+  document.getElementById('actionsRow').style.display='none';
+  setStatus('');document.getElementById('fileInput').value='';
   document.getElementById('fileInput').click();
 }
 
-// ── STATUS ────────────────────────────────────────────────────────────────
-function setStatus(msg, type = 'info') {
-  const b = document.getElementById('statusBox');
-  if (!msg) { b.innerHTML = ''; return; }
-  const noSpin = type === 'success' || type === 'error';
-  b.innerHTML = `<div class="status ${type}">${noSpin ? '' : '<div class="spinner"></div>'}${msg}</div>`;
+// ── STATUS ────────────────────────────────────────────────────────────
+function setStatus(msg,cls='info'){
+  const b=document.getElementById('statusBox');
+  if(!msg){b.innerHTML='';return;}
+  const nospin=cls==='ok'||cls==='error';
+  b.innerHTML=`<div class="status st-${cls}">${nospin?'':'<div class="spinner"></div>'}${msg}</div>`;
 }
 
-// ── PROCESS ───────────────────────────────────────────────────────────────
-async function runProcess(regen = false) {
-  if (!selectedFile) return;
-  const btn = document.getElementById('processBtn');
-  btn.disabled = true; btn.textContent = 'Обрабатываю...';
+// ── PROCESS ───────────────────────────────────────────────────────────
+async function runProcess(regen=false){
+  if(!selectedFile&&currentMode!=='genimg')return;
 
-  const scale = parseFloat(document.getElementById('scaleSlider').value) / 100;
-  const shadow = document.getElementById('shadowToggle').checked ? 'true' : 'false';
+  const btn=document.getElementById('processBtn');
+  btn.disabled=true;btn.textContent='Обрабатываю...';
 
-  try {
-    if (!fgBlob) {
-      setStatus('1/2 — Удаляю фон...', 'info');
-      const fd1 = new FormData(); fd1.append('file', selectedFile);
-      const r1 = await fetch('/api/remove', { method: 'POST', body: fd1 });
-      if (!r1.ok) throw new Error(await r1.text());
-      fgBlob = await r1.blob();
+  const scale=parseFloat(document.getElementById('scaleSlider').value)/100;
+  const shadow=document.getElementById('shadowToggle').checked?'true':'false';
+  const rotation=currentRotation;
+  const hue=selectedHue||'';
+
+  try{
+    // ── Генерация изображения (no product) ──
+    if(currentMode==='genimg'){
+      const prompt=genImgTranslated||document.getElementById('genImgPrompt').value.trim();
+      if(!prompt)throw new Error('Введи промпт для генерации');
+      setStatus('Генерирую изображение (15–40 сек)...','ai');
+      const fd=new FormData();fd.append('prompt',prompt);
+      const r=await fetch('/api/generate-image',{method:'POST',body:fd});
+      if(!r.ok)throw new Error(await r.text());
+      resultBlob=await r.blob();
+      showResult(URL.createObjectURL(resultBlob));
+      setStatus('Готово! 🎉','ok');
+      btn.disabled=false;btn.innerHTML='✨ Обработать';return;
     }
 
-    if (currentMode === 'remove') {
-      // Just show the transparent PNG
-      resultBlob = fgBlob;
+    // ── Шаг 1: удалить фон ──
+    if(!fgBlob){
+      setStatus('1/2 — Удаляю фон...','info');
+      const fd=new FormData();fd.append('file',selectedFile);
+      const r=await fetch('/api/remove',{method:'POST',body:fd});
+      if(!r.ok)throw new Error(await r.text());
+      fgBlob=await r.blob();
+    }
+
+    // ── Удаление фона (только PNG) ──
+    if(currentMode==='remove'){
+      resultBlob=fgBlob;
       showResult(URL.createObjectURL(fgBlob));
-      setStatus('Фон удалён! 🎉', 'success');
-      btn.disabled = false; btn.innerHTML = '✨ Обработать';
-      return;
+      setStatus('Фон удалён! 🎉','ok');
+      btn.disabled=false;btn.innerHTML='✨ Обработать';return;
     }
 
-    const fd2 = new FormData();
-    fd2.append('fg', fgBlob, 'fg.png');
-    fd2.append('scale', scale);
-    fd2.append('position', currentPosition);
-    fd2.append('shadow', shadow);
+    // ── Шаг 2: composite ──
+    const fd=new FormData();
+    fd.append('fg',fgBlob,'fg.png');
+    fd.append('scale',scale);
+    fd.append('position',currentPos);
+    fd.append('shadow',shadow);
+    fd.append('rotation',rotation);
+    if(hue)fd.append('hue_color',hue);
 
-    if (currentMode === 'ai') {
-      const prompt = selectedAiPrompt || translatedPrompt;
-      if (!prompt) throw new Error('Выбери пресет или введи промпт для AI-фона');
-      fd2.append('mode', 'generate'); fd2.append('prompt', prompt);
-      setStatus('2/2 — Генерирую AI-фон (15–40 сек)...', 'ai');
-    } else if (currentMode === 'color') {
-      fd2.append('mode', 'color'); fd2.append('color', selectedColor);
-      setStatus('2/2 — Накладываю цвет...', 'info');
-    } else if (currentMode === 'custom') {
-      if (selectedBgName) {
-        fd2.append('mode', 'bg_name'); fd2.append('bg_name', selectedBgName);
-      } else if (selectedBgFile) {
-        fd2.append('mode', 'bg_file'); fd2.append('bg_file', selectedBgFile);
-      } else {
-        throw new Error('Выбери или загрузи фон');
-      }
-      setStatus('2/2 — Накладываю фон...', 'info');
+    if(currentMode==='ai'){
+      const p=selectedAiPrompt||translatedPrompt;
+      if(!p)throw new Error('Выбери пресет или введи промпт');
+      fd.append('mode','generate');fd.append('prompt',p);
+      setStatus('2/2 — Генерирую AI-фон (15–40 сек)...','ai');
+    } else if(currentMode==='primerka'){
+      if(!selectedPrimerkaPrompt)throw new Error('Выбери сцену для примерки');
+      fd.append('mode','generate');fd.append('prompt',selectedPrimerkaPrompt);
+      setStatus('2/2 — AI-примерка (15–40 сек)...','ai');
+    } else if(currentMode==='color'){
+      fd.append('mode','color');fd.append('color',selectedBgColor);
+      setStatus('2/2 — Накладываю цвет...','info');
+    } else if(currentMode==='custom'){
+      if(selectedBgName){fd.append('mode','bg_name');fd.append('bg_name',selectedBgName);}
+      else throw new Error('Выбери фон из библиотеки');
+      setStatus('2/2 — Накладываю фон...','info');
     }
 
-    const r2 = await fetch('/api/composite', { method: 'POST', body: fd2 });
-    if (!r2.ok) throw new Error(await r2.text());
-    resultBlob = await r2.blob();
+    const r2=await fetch('/api/composite',{method:'POST',body:fd});
+    if(!r2.ok)throw new Error(await r2.text());
+    resultBlob=await r2.blob();
     showResult(URL.createObjectURL(resultBlob));
-    setStatus('Готово! 🎉', 'success');
-  } catch (e) {
-    setStatus('Ошибка: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.innerHTML = '✨ Обработать';
+    setStatus('Готово! 🎉','ok');
+  }catch(e){
+    setStatus('Ошибка: '+e.message,'error');
+  }finally{
+    btn.disabled=false;btn.innerHTML='✨ Обработать';
   }
 }
 
-function showResult(url) {
-  document.getElementById('resultImg').src = url;
-  document.getElementById('resultImg').style.display = 'block';
-  document.getElementById('resultEmpty').style.display = 'none';
-  document.getElementById('downloadBtn').style.display = 'inline-flex';
-  document.getElementById('regenBtn').style.display = 'inline-flex';
+function showResult(url){
+  document.getElementById('resultImg').src=url;
+  document.getElementById('resultImg').style.display='block';
+  document.getElementById('resultEmpty').style.display='none';
+  document.getElementById('dlBtn').style.display='inline-flex';
+  document.getElementById('regenBtn').style.display='inline-flex';
 }
 
-function download() {
-  if (!resultBlob) return;
-  const a = document.createElement('a'); a.href = URL.createObjectURL(resultBlob);
-  a.download = `product_${Date.now()}.${resultBlob.type === 'image/png' ? 'png' : 'jpg'}`;
+function doDownload(){
+  if(!resultBlob)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(resultBlob);
+  a.download=`product_${Date.now()}.${resultBlob.type==='image/png'?'png':'jpg'}`;
   a.click();
 }
 
-// ── BACKGROUNDS ───────────────────────────────────────────────────────────
-async function loadBgs() {
-  const r = await fetch('/api/backgrounds');
-  const bgs = await r.json();
-  const grid = document.getElementById('bgGrid');
-  const empty = document.getElementById('bgEmpty');
-  grid.innerHTML = '';
-  empty.style.display = bgs.length ? 'none' : 'block';
-  bgs.forEach(bg => {
-    const div = document.createElement('div'); div.className = 'bg-thumb';
-    div.innerHTML = `<img src="${bg.data}"><div class="bname">${bg.name}</div><button class="del" onclick="deleteBg(event,'${bg.file}')">✕</button>`;
-    div.onclick = () => { selectedBgName = bg.file; document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active')); div.classList.add('active'); };
+// ── REEL ──────────────────────────────────────────────────────────────
+async function createReel(){
+  if(!resultBlob){setStatus('Сначала обработай фото','error');return;}
+  setStatus('Создаю рилс (30–60 сек)...','ai');
+  try{
+    const fd=new FormData();fd.append('image',resultBlob,'img.jpg');
+    const r=await fetch('/api/reel',{method:'POST',body:fd});
+    if(!r.ok)throw new Error(await r.text());
+    const blob=await r.blob();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=`reel_${Date.now()}.mp4`;a.click();
+    setStatus('Рилс готов! Скачивается... 🎬','ok');
+  }catch(e){setStatus('Ошибка: '+e.message,'error');}
+}
+
+// ── BACKGROUNDS ───────────────────────────────────────────────────────
+async function loadBgs(){
+  const bgs=await(await fetch('/api/backgrounds')).json();
+  const grid=document.getElementById('bgGrid');
+  const empty=document.getElementById('bgEmpty');
+  grid.innerHTML='';empty.style.display=bgs.length?'none':'block';
+  bgs.forEach(bg=>{
+    const div=document.createElement('div');div.className='bg-th';
+    div.innerHTML=`<img src="${bg.data}"><div class="nm">${bg.name}</div><button class="del" onclick="delBg(event,'${bg.file}')">✕</button>`;
+    div.onclick=()=>{selectedBgName=bg.file;document.querySelectorAll('.bg-th').forEach(t=>t.classList.remove('active'));div.classList.add('active');};
     grid.appendChild(div);
   });
 }
-
-async function uploadBg(file) {
-  if (!file) return;
-  const fd = new FormData(); fd.append('file', file);
-  const r = await fetch('/api/backgrounds/upload', { method: 'POST', body: fd });
-  if (r.ok) { activateSection('custom'); loadBgs(); }
+async function uploadBg(f){
+  if(!f)return;
+  const fd=new FormData();fd.append('file',f);
+  const r=await fetch('/api/backgrounds/upload',{method:'POST',body:fd});
+  if(r.ok){activate('custom');loadBgs();}
 }
-
-async function deleteBg(e, file) {
-  e.stopPropagation();
-  if (!confirm('Удалить?')) return;
-  await fetch(`/api/backgrounds/${file}`, { method: 'DELETE' }); loadBgs();
+async function delBg(e,file){
+  e.stopPropagation();if(!confirm('Удалить?'))return;
+  await fetch(`/api/backgrounds/${file}`,{method:'DELETE'});loadBgs();
 }
 
 loadBgs();
